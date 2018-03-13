@@ -1,2 +1,5 @@
+rootProject.name = "oop-2018"
+
 include "Zoo"
 include "Oxo"
+include "ScotlandYard"
