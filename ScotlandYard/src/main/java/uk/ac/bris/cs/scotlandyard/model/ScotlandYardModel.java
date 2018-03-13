@@ -1,22 +1,67 @@
 package uk.ac.bris.cs.scotlandyard.model;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
+import com.google.common.collect.Streams;
 import uk.ac.bris.cs.gamekit.graph.Graph;
+
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 // TODO implement all methods and pass all tests
 public class ScotlandYardModel implements ScotlandYardGame {
 
-	public ScotlandYardModel(List<Boolean> rounds, Graph<Integer, Transport> graph,
-			PlayerConfiguration mrX, PlayerConfiguration firstDetective,
-			PlayerConfiguration... restOfTheDetectives) {
-		// TODO
-	}
+    private final List<Boolean> rounds;
+    private final Graph<Integer, Transport> graph;
+    private final PlayerConfiguration mrX;
+    private final List<PlayerConfiguration> detectives;
 
-	@Override
+    public ScotlandYardModel(List<Boolean> rounds,
+                             Graph<Integer, Transport> graph,
+                             PlayerConfiguration mrX,
+                             PlayerConfiguration firstDetective, PlayerConfiguration... restOfTheDetectives) {
+        this.rounds = Objects.requireNonNull(rounds);
+        if (rounds.isEmpty()){
+            throw new IllegalArgumentException("Rounds was empty");
+        }
+
+        this.graph = Objects.requireNonNull(graph);
+        if (graph.isEmpty()){
+            throw new IllegalArgumentException("Graph was empty");
+        }
+
+        this.mrX = Objects.requireNonNull(mrX);
+        if (mrX.colour != Colour.BLACK){
+            throw new IllegalArgumentException("MrX should be black");
+        }
+
+        this.detectives = new ArrayList<>();
+        detectives.add(Objects.requireNonNull(firstDetective));
+        detectives.addAll(Arrays.asList(Objects.requireNonNull(restOfTheDetectives)));
+
+        detectives.forEach(detective -> Objects.requireNonNull(detective));
+
+        List<PlayerConfiguration> allPlayers = new ArrayList<>(detectives);
+        allPlayers.add(mrX);
+        if (duplicates(allPlayers.stream().map(player -> player.colour))) {
+            throw new IllegalArgumentException("Duplicate player colour");
+        }
+        if (duplicates(allPlayers.stream().map(player -> player.location))) {
+            throw new IllegalArgumentException("Duplicate player location");
+        }
+    }
+
+    private <T> boolean duplicates(Stream<T> stream) {
+        Set<T> set = new HashSet<>();
+        return stream.anyMatch(item -> {
+            if (set.contains(item)) return true;
+            set.add(item);
+            return false;
+        });
+    }
+
+    @Override
 	public void registerSpectator(Spectator spectator) {
 		// TODO
 		throw new RuntimeException("Implement me");
@@ -90,8 +135,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
 	@Override
 	public Graph<Integer, Transport> getGraph() {
-		// TODO
-		throw new RuntimeException("Implement me");
+		return graph;
 	}
 
 }
