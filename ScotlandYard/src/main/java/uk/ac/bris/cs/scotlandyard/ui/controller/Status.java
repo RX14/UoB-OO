@@ -24,49 +24,55 @@ import uk.ac.bris.cs.scotlandyard.ui.model.BoardProperty;
 @BindFXML("layout/Status.fxml")
 public final class Status implements Controller, GameControl {
 
-	@FXML private ToolBar root;
-	@FXML private Label round;
-	@FXML private Label player;
-	@FXML private Label time;
-	@FXML private Label status;
-	@FXML private Slider volume;
+    @FXML
+    private ToolBar root;
+    @FXML
+    private Label round;
+    @FXML
+    private Label player;
+    @FXML
+    private Label time;
+    @FXML
+    private Label status;
+    @FXML
+    private Slider volume;
 
-	private final ResourceManager manager;
+    private final ResourceManager manager;
 
-	Status(ResourceManager manager, BoardProperty config) {
-		Controller.bind(this);
-		this.manager = manager;
-	}
+    Status(ResourceManager manager, BoardProperty config) {
+        Controller.bind(this);
+        this.manager = manager;
+    }
 
-	@Override
-	public void onGameAttach(ScotlandYardView view, ModelConfiguration configuration) {
-		bindView(view);
-	}
+    @Override
+    public void onGameAttach(ScotlandYardView view, ModelConfiguration configuration) {
+        bindView(view);
+    }
 
-	@Override
-	public void onRoundStarted(ScotlandYardView view, int round) {
-		bindView(view);
-	}
+    @Override
+    public void onRoundStarted(ScotlandYardView view, int round) {
+        bindView(view);
+    }
 
-	@Override
-	public void onMoveMade(ScotlandYardView view, Move move) {
-		bindView(view);
-	}
+    @Override
+    public void onMoveMade(ScotlandYardView view, Move move) {
+        bindView(view);
+    }
 
-	private void bindView(ScotlandYardView view) {
-		int round = view.getCurrentRound();
-		this.round.setText(round == 0 ? "N/A" : round + " of " + view.getRounds().size());
-		this.player.setText(view.getCurrentPlayer().toString());
-		this.status.setText(String.format("Waiting move(%s)", view.getCurrentPlayer()));
-	}
+    private void bindView(ScotlandYardView view) {
+        int round = view.getCurrentRound();
+        this.round.setText(round == 0 ? "N/A" : round + " of " + view.getRounds().size());
+        this.player.setText(view.getCurrentPlayer().toString());
+        this.status.setText(String.format("Waiting move(%s)", view.getCurrentPlayer()));
+    }
 
-	@Override
-	public void onGameOver(ScotlandYardView view, Set<Colour> winningPlayers) {
-		status.setText("Game completed, winning player:" + view.getWinningPlayers());
-	}
+    @Override
+    public void onGameOver(ScotlandYardView view, Set<Colour> winningPlayers) {
+        status.setText("Game completed, winning player:" + view.getWinningPlayers());
+    }
 
-	@Override
-	public Parent root() {
-		return root;
-	}
+    @Override
+    public Parent root() {
+        return root;
+    }
 }

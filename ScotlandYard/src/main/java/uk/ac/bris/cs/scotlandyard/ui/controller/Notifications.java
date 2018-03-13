@@ -35,112 +35,116 @@ import uk.ac.bris.cs.scotlandyard.ui.model.BoardProperty;
 @BindFXML("layout/Notification.fxml")
 public final class Notifications implements Controller, GameControl {
 
-	@FXML private VBox root;
+    @FXML
+    private VBox root;
 
-	private final Map<String, Notification> notifications = new HashMap<>();
+    private final Map<String, Notification> notifications = new HashMap<>();
 
-	Notifications(ResourceManager resourceManager, BoardProperty config) {
-		Controller.bind(this);
-	}
+    Notifications(ResourceManager resourceManager, BoardProperty config) {
+        Controller.bind(this);
+    }
 
-	void show(String key, Notification notification) {
-		Platform.runLater(() -> {
-			notifications.compute(key, (k, last) -> {
-				if (last != null) last.dismiss();
-				return notification;
-			});
-			StackPane container = new StackPane(notification.root());
-			container.setId(key);
-			container.getStyleClass().add("notification");
-			root.getChildren().add(container);
-		});
-	}
+    void show(String key, Notification notification) {
+        Platform.runLater(() -> {
+            notifications.compute(key, (k, last) -> {
+                if (last != null) last.dismiss();
+                return notification;
+            });
+            StackPane container = new StackPane(notification.root());
+            container.setId(key);
+            container.getStyleClass().add("notification");
+            root.getChildren().add(container);
+        });
+    }
 
-	void dismiss(String... keys) {
-		Platform.runLater(() -> {
-			Set<String> set = Sets.newHashSet(keys);
-			root.getChildren().removeIf(p -> set.contains(p.getId()));
-			for (String key : keys) {
-				Notification notification = notifications.get(key);
-				if (notification != null) notification.dismiss();
-			}
-		});
-	}
+    void dismiss(String... keys) {
+        Platform.runLater(() -> {
+            Set<String> set = Sets.newHashSet(keys);
+            root.getChildren().removeIf(p -> set.contains(p.getId()));
+            for (String key : keys) {
+                Notification notification = notifications.get(key);
+                if (notification != null) notification.dismiss();
+            }
+        });
+    }
 
-	void dismissAll() {
-		Platform.runLater(() -> {
-			root.getChildren().clear();
-			notifications.values().forEach(Notification::dismiss);
-			notifications.clear();
-		});
+    void dismissAll() {
+        Platform.runLater(() -> {
+            root.getChildren().clear();
+            notifications.values().forEach(Notification::dismiss);
+            notifications.clear();
+        });
 
-	}
+    }
 
-	public static class NotificationBuilder {
+    public static class NotificationBuilder {
 
-		private final VBox root = new VBox();
-		private final Label title = new Label();
-		private final HBox actions = new HBox();
-		private final ProgressBar timer = new ProgressBar();
-		private Timeline timeline;
+        private final VBox root = new VBox();
+        private final Label title = new Label();
+        private final HBox actions = new HBox();
+        private final ProgressBar timer = new ProgressBar();
+        private Timeline timeline;
 
-		NotificationBuilder(String titleText) {
-			root.setMinWidth(300);
-			root.setSpacing(8);
-			root.setAlignment(Pos.CENTER);
-			title.setContentDisplay(ContentDisplay.RIGHT);
-			title.setGraphicTextGap(12);
-			title.setGraphic(actions);
-			title.setText(titleText);
-			timer.setManaged(false);
-			timer.setMaxWidth(Double.MAX_VALUE);
-			root.getChildren().addAll(title, timer);
-		}
+        NotificationBuilder(String titleText) {
+            root.setMinWidth(300);
+            root.setSpacing(8);
+            root.setAlignment(Pos.CENTER);
+            title.setContentDisplay(ContentDisplay.RIGHT);
+            title.setGraphicTextGap(12);
+            title.setGraphic(actions);
+            title.setText(titleText);
+            timer.setManaged(false);
+            timer.setMaxWidth(Double.MAX_VALUE);
+            root.getChildren().addAll(title, timer);
+        }
 
-		NotificationBuilder addAction(String text, Runnable callback) {
-			Button action = new Button(text);
-			action.setOnAction(e -> callback.run());
-			actions.getChildren().add(action);
-			return this;
-		}
+        NotificationBuilder addAction(String text, Runnable callback) {
+            Button action = new Button(text);
+            action.setOnAction(e -> callback.run());
+            actions.getChildren().add(action);
+            return this;
+        }
 
-		Notification create() {
-			return () -> root;
-		}
+        Notification create() {
+            return () -> root;
+        }
 
-		Notification create(Duration duration, Runnable callback) {
-			timer.setManaged(true);
-			timeline = new Timeline(
-					new KeyFrame(Duration.ZERO, new KeyValue(timer.progressProperty(), 1)),
-					new KeyFrame(duration, new KeyValue(timer.progressProperty(), 0)));
-			timeline.setOnFinished(e -> callback.run());
-			timeline.play();
-			return new Notification() {
+        Notification create(Duration duration, Runnable callback) {
+            timer.setManaged(true);
+            timeline = new Timeline(
+                    new KeyFrame(Duration.ZERO, new KeyValue(timer.progressProperty(), 1)),
+                    new KeyFrame(duration, new KeyValue(timer.progressProperty(), 0)));
+            timeline.setOnFinished(e -> callback.run());
+            timeline.play();
+            return new Notification() {
 
-				@Override
-				public void dismiss() {
-					timeline.stop();
-				}
+                @Override
+                public void dismiss() {
+                    timeline.stop();
+                }
 
-				@Override
-				public Node root() {
-					return root;
-				}
-			};
-		}
+                @Override
+                public Node root() {
+                    return root;
+                }
+            };
+        }
 
-		interface Notification {
+        interface Notification {
 
-			default void dismiss() {};
+            default void dismiss() {
+            }
 
-			Node root();
+            ;
 
-		}
+            Node root();
 
-	}
+        }
 
-	@Override
-	public Parent root() {
-		return root;
-	}
+    }
+
+    @Override
+    public Parent root() {
+        return root;
+    }
 }

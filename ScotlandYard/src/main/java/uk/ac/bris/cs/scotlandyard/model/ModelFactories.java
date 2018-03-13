@@ -11,31 +11,32 @@ import uk.ac.bris.cs.gamekit.graph.Graph;
  */
 public class ModelFactories {
 
-	/**
-	 * A list of models to test
-	 * @return A list of models; never null
-	 */
-	static List<Class<? extends ScotlandYardGameFactory>> factories() {
-		return Collections.singletonList(ImperativeModelFactory.class);
-	}
+    /**
+     * A list of models to test
+     *
+     * @return A list of models; never null
+     */
+    static List<Class<? extends ScotlandYardGameFactory>> factories() {
+        return Collections.singletonList(ImperativeModelFactory.class);
+    }
 
-	/**
-	 * A simple implementation that uses the {@link ScotlandYardModel}
-	 */
-	static class ImperativeModelFactory implements ScotlandYardGameFactory {
+    /**
+     * A simple implementation that uses the {@link ScotlandYardModel}
+     */
+    static class ImperativeModelFactory implements ScotlandYardGameFactory {
 
-		@Override
-		public ScotlandYardGame createGame(List<Boolean> rounds, Graph<Integer, Transport> graph,
-				PlayerConfiguration mrX, PlayerConfiguration firstDetective,
-				PlayerConfiguration... restOfTheDetectives) {
-			return new ScotlandYardModel(rounds, graph, mrX, firstDetective, restOfTheDetectives);
-		}
+        @Override
+        public ScotlandYardGame createGame(List<Boolean> rounds, Graph<Integer, Transport> graph,
+                                           PlayerConfiguration mrX, PlayerConfiguration firstDetective,
+                                           PlayerConfiguration... restOfTheDetectives) {
+            return new ScotlandYardModel(rounds, graph, mrX, firstDetective, restOfTheDetectives);
+        }
 
-		@Override
-		public String toString() {
-			return "ScotlandYardModel";
-		}
+        @Override
+        public String toString() {
+            return "ScotlandYardModel";
+        }
 
-	}
+    }
 
 }

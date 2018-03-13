@@ -27,189 +27,197 @@ import static uk.ac.bris.cs.scotlandyard.model.ScotlandYardView.NOT_STARTED;
  */
 public class ModelRoundTest extends ParameterisedModelTestBase {
 
-	private TestHarness harness;
-	@Before public void initialise() { harness = new TestHarness(); }
-	@After public void tearDown() { harness.forceReleaseShutdownLock(); }
+    private TestHarness harness;
 
-	@Test
-	public void testPlayerNotified() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK);
-		PlayerConfiguration blue = harness.newPlayer(BLUE);
-		harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove())
-				.thenIgnoreAnyFurtherInteractions();
-	}
+    @Before
+    public void initialise() {
+        harness = new TestHarness();
+    }
 
-	@Test
-	public void testCallbackIsNotNull() {
-		harness.play(createGame(harness.newPlayer(BLACK), harness.newPlayer(BLUE)))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().givenCallback(neq(null)))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+    @After
+    public void tearDown() {
+        harness.forceReleaseShutdownLock();
+    }
 
-	@Test
-	public void testInitialPositionMatchFirstRound() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK);
-		PlayerConfiguration blue = harness.newPlayer(BLUE);
+    @Test
+    public void testPlayerNotified() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK);
+        PlayerConfiguration blue = harness.newPlayer(BLUE);
+        harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove())
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-		// all locations should match the initial given location for all players
-		harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().givenLocation(eq(mrX.location)).willPickFirst(),
-				player(BLUE).makeMove().givenLocation(eq(blue.location)))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+    @Test
+    public void testCallbackIsNotNull() {
+        harness.play(createGame(harness.newPlayer(BLACK), harness.newPlayer(BLUE)))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().givenCallback(neq(null)))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-	@Test
-	public void testCallbackPositionMatchPlayerLocationDuringRevealRound() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+    @Test
+    public void testInitialPositionMatchFirstRound() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK);
+        PlayerConfiguration blue = harness.newPlayer(BLUE);
 
-		// reveal round should match
-		harness.play(createGame(rounds(true, true), mrX, blue))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().givenLocation(eq(mrX.location)).willPickFirst(),
-						player(BLUE).makeMove().givenLocation(eq(blue.location)))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+        // all locations should match the initial given location for all players
+        harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().givenLocation(eq(mrX.location)).willPickFirst(),
+                player(BLUE).makeMove().givenLocation(eq(blue.location)))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-	@Test
-	public void testCallbackPositionMatchPlayerLocationDuringHiddenRound() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+    @Test
+    public void testCallbackPositionMatchPlayerLocationDuringRevealRound() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-		// hidden round should match
-		ScotlandYardGame game = createGame(rounds(false, false), mrX, blue);
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().givenLocation(eq(mrX.location)).willPick(taxi(46)),
-				player(BLUE).makeMove().givenLocation(eq(blue.location)).willPick(taxi(95)))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+        // reveal round should match
+        harness.play(createGame(rounds(true, true), mrX, blue))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().givenLocation(eq(mrX.location)).willPickFirst(),
+                        player(BLUE).makeMove().givenLocation(eq(blue.location)))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-	@Test
-	public void testGetCurrentPlayerCorrectForAllRounds() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+    @Test
+    public void testCallbackPositionMatchPlayerLocationDuringHiddenRound() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-		ScotlandYardGame game = createGame(mrX, blue);
-		game.registerSpectator(harness.createSpectator(ON_MOVE_MADE));
-		DoubleMove expected = x2(BLACK, taxi(32), taxi(19));
+        // hidden round should match
+        ScotlandYardGame game = createGame(rounds(false, false), mrX, blue);
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().givenLocation(eq(mrX.location)).willPick(taxi(46)),
+                player(BLUE).makeMove().givenLocation(eq(blue.location)).willPick(taxi(95)))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(expected),
+    @Test
+    public void testGetCurrentPlayerCorrectForAllRounds() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-				// MrX consumes a double move, current player after the move has been
-				// committed will be Blue for all three onMoveMade notifications
-				spectator().onMoveMade()
-						.givenGameState(hasCurrentPlayer(BLUE)),
-				spectator().onMoveMade()
-						.givenGameState(hasCurrentPlayer(BLUE)),
-				spectator().onMoveMade()
-						.givenGameState(hasCurrentPlayer(BLUE)),
-				player(BLUE).makeMove().willPick(taxi(95)),
+        ScotlandYardGame game = createGame(mrX, blue);
+        game.registerSpectator(harness.createSpectator(ON_MOVE_MADE));
+        DoubleMove expected = x2(BLACK, taxi(32), taxi(19));
 
-				// Blue consumes a taxi move, current player after the move has been
-				// committed will be Blue for all onMoveMade notifications
-				spectator().onMoveMade()
-						.givenGameState(hasCurrentPlayer(BLACK)))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(expected),
 
-	@Test
-	public void testRoundIncrementsAfterAllPlayersHavePlayed() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 35);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 50);
+                // MrX consumes a double move, current player after the move has been
+                // committed will be Blue for all three onMoveMade notifications
+                spectator().onMoveMade()
+                        .givenGameState(hasCurrentPlayer(BLUE)),
+                spectator().onMoveMade()
+                        .givenGameState(hasCurrentPlayer(BLUE)),
+                spectator().onMoveMade()
+                        .givenGameState(hasCurrentPlayer(BLUE)),
+                player(BLUE).makeMove().willPick(taxi(95)),
 
-		harness.play(createGame(mrX, blue))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(65)),
-						player(BLUE).makeMove().willPick(taxi(49)))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(bus(82)),
-						player(BLUE).makeMove().givenGameState(isOnRound(2)))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+                // Blue consumes a taxi move, current player after the move has been
+                // committed will be Blue for all onMoveMade notifications
+                spectator().onMoveMade()
+                        .givenGameState(hasCurrentPlayer(BLACK)))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-	@Test
-	public void testRoundIncrementsCorrectlyForDoubleMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+    @Test
+    public void testRoundIncrementsAfterAllPlayersHavePlayed() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 35);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 50);
 
-		ScotlandYardGame game = createGame(mrX, blue);
-		game.registerSpectator(harness.createSpectator(ON_MOVE_MADE));
+        harness.play(createGame(mrX, blue))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(65)),
+                        player(BLUE).makeMove().willPick(taxi(49)))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(bus(82)),
+                        player(BLUE).makeMove().givenGameState(isOnRound(2)))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-		harness.play(game)
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(x2(taxi(32), taxi(19))),
-						spectator().onMoveMade().givenGameState(isOnRound(NOT_STARTED)),
-						spectator().onMoveMade().givenGameState(isOnRound(1)),
-						spectator().onMoveMade().givenGameState(isOnRound(2)))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+    @Test
+    public void testRoundIncrementsCorrectlyForDoubleMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testMrXIsTheFirstToPlay() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK);
-		PlayerConfiguration blue = harness.newPlayer(BLUE);
+        ScotlandYardGame game = createGame(mrX, blue);
+        game.registerSpectator(harness.createSpectator(ON_MOVE_MADE));
 
-		harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPickFirst(),
-				player(BLUE).makeMove())
-				.thenIgnoreAnyFurtherInteractions();
-	}
+        harness.play(game)
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(x2(taxi(32), taxi(19))),
+                        spectator().onMoveMade().givenGameState(isOnRound(NOT_STARTED)),
+                        spectator().onMoveMade().givenGameState(isOnRound(1)),
+                        spectator().onMoveMade().givenGameState(isOnRound(2)))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-	@Test
-	public void testRoundWaitsForPlayerWhoDoesNotRespond() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK);
-		PlayerConfiguration blue = harness.newPlayer(BLUE);
+    @Test
+    public void testMrXIsTheFirstToPlay() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK);
+        PlayerConfiguration blue = harness.newPlayer(BLUE);
 
-		harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
-				// black player does nothing, preventing the game from rotating
-				player(BLACK).makeMove().wontRespond())
-				// blue should not receive any move request at all because black stalled
-				// the game
-				.thenAssertNoFurtherInteractions();
-	}
+        harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPickFirst(),
+                player(BLUE).makeMove())
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-	@Test
-	public void testRoundRotationNotifiesAllPlayer() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 35);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 50);
-		PlayerConfiguration red = harness.newPlayer(RED, 26);
+    @Test
+    public void testRoundWaitsForPlayerWhoDoesNotRespond() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK);
+        PlayerConfiguration blue = harness.newPlayer(BLUE);
 
-		ScotlandYardGame game = createGame(mrX, blue, red);
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(22)),
-				player(BLUE).makeMove().willPick(taxi(37)),
-				player(RED).makeMove().willPick(taxi(15)))
+        harness.play(createGame(mrX, blue)).startRotationAndAssertTheseInteractionsOccurInOrder(
+                // black player does nothing, preventing the game from rotating
+                player(BLACK).makeMove().wontRespond())
+                // blue should not receive any move request at all because black stalled
+                // the game
+                .thenAssertNoFurtherInteractions();
+    }
 
-				// everyone should be notified only once
-				.thenAssertNoFurtherInteractions();
-	}
+    @Test
+    public void testRoundRotationNotifiesAllPlayer() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 35);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 50);
+        PlayerConfiguration red = harness.newPlayer(RED, 26);
 
-	@Test
-	public void testCallbackWithNullWillThrow() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK);
-		PlayerConfiguration blue = harness.newPlayer(BLUE);
-		ScotlandYardGame game = createGame(mrX, blue);
+        ScotlandYardGame game = createGame(mrX, blue, red);
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(22)),
+                player(BLUE).makeMove().willPick(taxi(37)),
+                player(RED).makeMove().willPick(taxi(15)))
 
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick((Move) null))
-				.shouldThrow(NullPointerException.class);
-	}
+                // everyone should be notified only once
+                .thenAssertNoFurtherInteractions();
+    }
 
-	@Test
-	public void testCallbackWithIllegalMoveNotInGivenMovesWillThrow() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK);
-		PlayerConfiguration blue = harness.newPlayer(BLUE);
-		ScotlandYardGame game = createGame(mrX, blue);
+    @Test
+    public void testCallbackWithNullWillThrow() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK);
+        PlayerConfiguration blue = harness.newPlayer(BLUE);
+        ScotlandYardGame game = createGame(mrX, blue);
 
-		// supplying a illegal tickets to the given consumer should not be
-		// allowed in this case, BUS ticket with destination 20 is not included
-		// in the given list
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(bus(20)))
-				.shouldThrow(IllegalArgumentException.class);
-	}
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick((Move) null))
+                .shouldThrow(NullPointerException.class);
+    }
+
+    @Test
+    public void testCallbackWithIllegalMoveNotInGivenMovesWillThrow() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK);
+        PlayerConfiguration blue = harness.newPlayer(BLUE);
+        ScotlandYardGame game = createGame(mrX, blue);
+
+        // supplying a illegal tickets to the given consumer should not be
+        // allowed in this case, BUS ticket with destination 20 is not included
+        // in the given list
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(bus(20)))
+                .shouldThrow(IllegalArgumentException.class);
+    }
 
 }

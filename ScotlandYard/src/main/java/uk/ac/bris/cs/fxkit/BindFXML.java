@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface BindFXML {
 
-	String value();
+    String value();
 
-	String css() default "NULL";
+    String css() default "NULL";
 }

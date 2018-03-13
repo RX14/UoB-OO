@@ -29,170 +29,184 @@ import static java.util.stream.Collectors.toList;
 
 public class TestHarnessPlayOutTestCodeGen implements CodeGen {
 
-	private final String harnessV = "harness";
-	private final String gameV = "game";
-	private final String roundsV = "rounds";
-	private final String seedV = "seed";
-	private final String spectatorV = "spectator";
+    private final String harnessV = "harness";
+    private final String gameV = "game";
+    private final String roundsV = "rounds";
+    private final String seedV = "seed";
+    private final String spectatorV = "spectator";
 
-	private final List<String> interactions = new ArrayList<>();
+    private final List<String> interactions = new ArrayList<>();
 
-	@Override public String name() { return "PlayOutTestCodeGen"; }
+    @Override
+    public String name() {
+        return "PlayOutTestCodeGen";
+    }
 
-	@Override public void movePicked(ImmutableScotlandYardView seed,
-	                                 ScotlandYardView view, int location, Set<Move> moves,
-	                                 Move picked) {
-		ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
-		interactions.add(format("player(%s).makeMove()" +
-						"\n\t.givenGameState(eq(%s))" +
-						"\n\t.givenLocation(eq(%d))" +
-						"\n\t.givenMoves(hasSize(%d))" +
-						"\n\t.willPick(%s)",
-				picked.colour(),
-				mkView(seedV, seed, now),
-				location,
-				moves.size(),
-				mkMove(picked)));
-	}
-	@Override public Spectator mkSpectator(ImmutableScotlandYardView seed) {
-		return new Spectator() {
-			@Override public void onMoveMade(ScotlandYardView view, Move move) {
-				ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
-				interactions.add(format("spectator().onMoveMade()" +
-								"\t\n.givenGameState(eq(%s))" +
-								"\t\n.givenMove(eq(%s))",
-						mkView(seedV, seed, now), mkMove(move)));
-			}
-			@Override public void onRoundStarted(ScotlandYardView view, int round) {
-				ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
-				interactions.add(format("spectator().onRoundStarted()" +
-								"\t\n.givenGameState(eq(%s))" +
-								"\t\n.givenRound(eq(%d))",
-						mkView(seedV, seed, now), round));
-			}
-			@Override public void onRotationComplete(ScotlandYardView view) {
-				ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
-				interactions.add(format("spectator().onRotationComplete()" +
-								"\t\n.givenGameState(eq(%s))" +
-								"\t\n.respondWith(startRotate(%s))",
-						mkView(seedV, seed, now), gameV));
-			}
-			@Override
-			public void onGameOver(ScotlandYardView view, Set<Colour> winningPlayers) {
-				ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
-				interactions.add(format("spectator().onGameOver()" +
-								"\t\n.givenGameState(eq(%s))" +
-								"\t\n.givenWinners(eq(ImmutableSet.of(%s)))",
-						mkView(seedV, seed, now),
-						winningPlayers.stream()
-								.map(Colour::name)
-								.collect(joining(", "))));
-			}
-		};
-	}
+    @Override
+    public void movePicked(ImmutableScotlandYardView seed,
+                           ScotlandYardView view, int location, Set<Move> moves,
+                           Move picked) {
+        ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
+        interactions.add(format("player(%s).makeMove()" +
+                        "\n\t.givenGameState(eq(%s))" +
+                        "\n\t.givenLocation(eq(%d))" +
+                        "\n\t.givenMoves(hasSize(%d))" +
+                        "\n\t.willPick(%s)",
+                picked.colour(),
+                mkView(seedV, seed, now),
+                location,
+                moves.size(),
+                mkMove(picked)));
+    }
 
+    @Override
+    public Spectator mkSpectator(ImmutableScotlandYardView seed) {
+        return new Spectator() {
+            @Override
+            public void onMoveMade(ScotlandYardView view, Move move) {
+                ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
+                interactions.add(format("spectator().onMoveMade()" +
+                                "\t\n.givenGameState(eq(%s))" +
+                                "\t\n.givenMove(eq(%s))",
+                        mkView(seedV, seed, now), mkMove(move)));
+            }
 
-	@Override public String readOut(ImmutableScotlandYardView seed,
-	                                ImmutableMap<Colour, PlayerConfiguration> configs,
-	                                String graphMethod) {
-		List<String> ls = new ArrayList<>();
-		ls.add(format("TestHarness %s = new TestHarness();", harnessV));
+            @Override
+            public void onRoundStarted(ScotlandYardView view, int round) {
+                ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
+                interactions.add(format("spectator().onRoundStarted()" +
+                                "\t\n.givenGameState(eq(%s))" +
+                                "\t\n.givenRound(eq(%d))",
+                        mkView(seedV, seed, now), round));
+            }
 
-		List<ImmutablePlayer> players = seed.players.stream()
-				.map(v -> new ImmutablePlayer(v.colour, configs.get(v.colour).location, v.tickets))
-				.collect(toList());
+            @Override
+            public void onRotationComplete(ScotlandYardView view) {
+                ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
+                interactions.add(format("spectator().onRotationComplete()" +
+                                "\t\n.givenGameState(eq(%s))" +
+                                "\t\n.respondWith(startRotate(%s))",
+                        mkView(seedV, seed, now), gameV));
+            }
 
-		ls.addAll(players.stream().map(p -> format("PlayerConfiguration %s = %s.newPlayer(\n%s);",
-				p.colour.name().toLowerCase(), harnessV, mkPlayer(p))).collect(toList()));
-
-		ls.add(format("List<Boolean> %s = Arrays.asList(\n%s);",
-				roundsV, seed.getRounds().stream()
-						.map(v -> v.toString() + (v ? "\n" : ""))
-						.collect(joining(", "))));
-
-		ls.add(format("ScotlandYardGame %s = createGame(%s, %s, \n%s);",
-				gameV, roundsV, graphMethod, players.stream()
-						.map(v -> v.colour.name().toLowerCase())
-						.collect(joining(", "))));
-
-		ls.add(format("Spectator %s = %s.createSpectator();", spectatorV, harnessV));
-		ls.add(format("%s.registerSpectator(%s);", gameV, spectatorV));
-		ls.add(format("ImmutableScotlandYardView %s = ImmutableScotlandYardView.snapshot(%s);",
-				seedV, gameV));
-
-		ls.add(format("%s.play(%s).startRotationAndAssertTheseInteractionsOccurInOrder(\n%s)" +
-						"\n.thenAssertNoFurtherInteractions();",
-				harnessV, gameV, interactions.stream().collect(joining(", \n"))));
-
-		return ls.stream().collect(joining("\n"));
-	}
+            @Override
+            public void onGameOver(ScotlandYardView view, Set<Colour> winningPlayers) {
+                ImmutableScotlandYardView now = ImmutableScotlandYardView.snapshot(view);
+                interactions.add(format("spectator().onGameOver()" +
+                                "\t\n.givenGameState(eq(%s))" +
+                                "\t\n.givenWinners(eq(ImmutableSet.of(%s)))",
+                        mkView(seedV, seed, now),
+                        winningPlayers.stream()
+                                .map(Colour::name)
+                                .collect(joining(", "))));
+            }
+        };
+    }
 
 
-	private static String mkTicket(Ticket t) {
-		switch (t) {
-			case TAXI:
-				return "taxi";
-			case BUS:
-				return "bus";
-			case UNDERGROUND:
-				return "underground";
-			case DOUBLE:
-				return "x2";
-			case SECRET:
-				return "secret";
-			default:
-				throw new AssertionError();
-		}
-	}
+    @Override
+    public String readOut(ImmutableScotlandYardView seed,
+                          ImmutableMap<Colour, PlayerConfiguration> configs,
+                          String graphMethod) {
+        List<String> ls = new ArrayList<>();
+        ls.add(format("TestHarness %s = new TestHarness();", harnessV));
 
-	private static String mkMove(Move m) {
-		String move;
-		String colour = m.colour().name();
-		if (m instanceof TicketMove) {
-			TicketMove tm = (TicketMove) m;
-			move = format("%s(%s, %d)", mkTicket(tm.ticket()), colour, tm.destination());
-		} else if (m instanceof DoubleMove) {
-			DoubleMove dm = (DoubleMove) m;
-			move = format("%s(%s, %s(%d), %s(%d))", mkTicket(Ticket.DOUBLE), colour,
-					mkTicket(dm.firstMove().ticket()), dm.firstMove().destination(),
-					mkTicket(dm.secondMove().ticket()), dm.secondMove().destination());
-		} else if (m instanceof PassMove) {
-			move = format("pass(%s)", colour);
-		} else throw new AssertionError();
-		return move;
-	}
+        List<ImmutablePlayer> players = seed.players.stream()
+                .map(v -> new ImmutablePlayer(v.colour, configs.get(v.colour).location, v.tickets))
+                .collect(toList());
+
+        ls.addAll(players.stream().map(p -> format("PlayerConfiguration %s = %s.newPlayer(\n%s);",
+                p.colour.name().toLowerCase(), harnessV, mkPlayer(p))).collect(toList()));
+
+        ls.add(format("List<Boolean> %s = Arrays.asList(\n%s);",
+                roundsV, seed.getRounds().stream()
+                        .map(v -> v.toString() + (v ? "\n" : ""))
+                        .collect(joining(", "))));
+
+        ls.add(format("ScotlandYardGame %s = createGame(%s, %s, \n%s);",
+                gameV, roundsV, graphMethod, players.stream()
+                        .map(v -> v.colour.name().toLowerCase())
+                        .collect(joining(", "))));
+
+        ls.add(format("Spectator %s = %s.createSpectator();", spectatorV, harnessV));
+        ls.add(format("%s.registerSpectator(%s);", gameV, spectatorV));
+        ls.add(format("ImmutableScotlandYardView %s = ImmutableScotlandYardView.snapshot(%s);",
+                seedV, gameV));
+
+        ls.add(format("%s.play(%s).startRotationAndAssertTheseInteractionsOccurInOrder(\n%s)" +
+                        "\n.thenAssertNoFurtherInteractions();",
+                harnessV, gameV, interactions.stream().collect(joining(", \n"))));
+
+        return ls.stream().collect(joining("\n"));
+    }
 
 
-	private static String mkPlayer(ImmutablePlayer p) {
-		String tickets = p.tickets().entrySet()
-				.stream()
-				.sorted(Entry.comparingByKey(comparingInt(TicketAbbr::ordinal)))
-				.flatMap(v -> Stream.of(v.getKey().toString(), v.getValue().toString()))
-				.collect(joining(", "));
-		return format("%s(%d).with(%s)",
-				p.colour.name().toLowerCase(Locale.ENGLISH), p.location, tickets);
-	}
-	private static String mkView(String seed,
-	                             ImmutableScotlandYardView prev,
-	                             ImmutableScotlandYardView now) {
-		StringBuilder delta = new StringBuilder(seed);
-		if (prev.currentPlayer != now.currentPlayer)
-			delta.append(format(".current(%s)", now.currentPlayer));
-		if (prev.currentRound != now.currentRound)
-			delta.append(format(".round(%s)", now.currentRound));
-		if (prev.gameOver != now.gameOver)
-			delta.append(format(".over(%s)", now.gameOver));
-		if (!prev.winning.equals(now.winning))
-			delta.append(format(".winning(%s)", now.winning.stream()
-					.map(Colour::name)
-					.collect(joining(", "))));
-		delta.append(format(".players(\n\t//<editor-fold defaultstate=\"%s\"> \n", "collapsed"));
-		delta.append(now.players.stream()
-				.map(TestHarnessPlayOutTestCodeGen::mkPlayer)
-				.collect(joining(", \n")));
-		delta.append(")\n\t//</editor-fold>\n");
-		return delta.toString();
-	}
+    private static String mkTicket(Ticket t) {
+        switch (t) {
+            case TAXI:
+                return "taxi";
+            case BUS:
+                return "bus";
+            case UNDERGROUND:
+                return "underground";
+            case DOUBLE:
+                return "x2";
+            case SECRET:
+                return "secret";
+            default:
+                throw new AssertionError();
+        }
+    }
+
+    private static String mkMove(Move m) {
+        String move;
+        String colour = m.colour().name();
+        if (m instanceof TicketMove) {
+            TicketMove tm = (TicketMove) m;
+            move = format("%s(%s, %d)", mkTicket(tm.ticket()), colour, tm.destination());
+        } else if (m instanceof DoubleMove) {
+            DoubleMove dm = (DoubleMove) m;
+            move = format("%s(%s, %s(%d), %s(%d))", mkTicket(Ticket.DOUBLE), colour,
+                    mkTicket(dm.firstMove().ticket()), dm.firstMove().destination(),
+                    mkTicket(dm.secondMove().ticket()), dm.secondMove().destination());
+        } else if (m instanceof PassMove) {
+            move = format("pass(%s)", colour);
+        } else throw new AssertionError();
+        return move;
+    }
+
+
+    private static String mkPlayer(ImmutablePlayer p) {
+        String tickets = p.tickets().entrySet()
+                .stream()
+                .sorted(Entry.comparingByKey(comparingInt(TicketAbbr::ordinal)))
+                .flatMap(v -> Stream.of(v.getKey().toString(), v.getValue().toString()))
+                .collect(joining(", "));
+        return format("%s(%d).with(%s)",
+                p.colour.name().toLowerCase(Locale.ENGLISH), p.location, tickets);
+    }
+
+    private static String mkView(String seed,
+                                 ImmutableScotlandYardView prev,
+                                 ImmutableScotlandYardView now) {
+        StringBuilder delta = new StringBuilder(seed);
+        if (prev.currentPlayer != now.currentPlayer)
+            delta.append(format(".current(%s)", now.currentPlayer));
+        if (prev.currentRound != now.currentRound)
+            delta.append(format(".round(%s)", now.currentRound));
+        if (prev.gameOver != now.gameOver)
+            delta.append(format(".over(%s)", now.gameOver));
+        if (!prev.winning.equals(now.winning))
+            delta.append(format(".winning(%s)", now.winning.stream()
+                    .map(Colour::name)
+                    .collect(joining(", "))));
+        delta.append(format(".players(\n\t//<editor-fold defaultstate=\"%s\"> \n", "collapsed"));
+        delta.append(now.players.stream()
+                .map(TestHarnessPlayOutTestCodeGen::mkPlayer)
+                .collect(joining(", \n")));
+        delta.append(")\n\t//</editor-fold>\n");
+        return delta.toString();
+    }
 
 
 }

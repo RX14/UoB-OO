@@ -8,13 +8,13 @@ import javafx.scene.layout.Pane;
  */
 public interface Visualiser {
 
-	/**
-	 * A surface to draw on, must be called in JavaFX's UI thread.
-	 * {@link javafx.application.Platform#runLater(Runnable)} could be used when
-	 * calling from a different thread.
-	 * 
-	 * @return the surface; never null
-	 */
-	Pane surface();
+    /**
+     * A surface to draw on, must be called in JavaFX's UI thread.
+     * {@link javafx.application.Platform#runLater(Runnable)} could be used when
+     * calling from a different thread.
+     *
+     * @return the surface; never null
+     */
+    Pane surface();
 
 }

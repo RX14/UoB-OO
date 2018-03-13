@@ -13,37 +13,37 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ManagedAI {
 
-	enum VisualiserType {
-		/**
-		 * {@link Visualiser#surface()} is directly on top of the map
-		 */
-		MAP_OVERLAP,
+    enum VisualiserType {
+        /**
+         * {@link Visualiser#surface()} is directly on top of the map
+         */
+        MAP_OVERLAP,
 
-		/**
-		 * {@link Visualiser#surface()} will be displayed in a separate tool
-		 * window
-		 */
-		WINDOWED,
+        /**
+         * {@link Visualiser#surface()} will be displayed in a separate tool
+         * window
+         */
+        WINDOWED,
 
-		/**
-		 * Does not render the node supplied by {@link Visualiser#surface()} at
-		 * all
-		 */
-		NONE
-	}
+        /**
+         * Does not render the node supplied by {@link Visualiser#surface()} at
+         * all
+         */
+        NONE
+    }
 
-	/**
-	 * The display name and unique identifier of the AI class
-	 * 
-	 * @return some unique name
-	 */
-	String value();
+    /**
+     * The display name and unique identifier of the AI class
+     *
+     * @return some unique name
+     */
+    String value();
 
-	/**
-	 * The visualiser type to use for the AI
-	 * 
-	 * @return the visualiser type, defaults to {@link VisualiserType#NONE}
-	 */
-	VisualiserType visualiserType() default VisualiserType.NONE;
+    /**
+     * The visualiser type to use for the AI
+     *
+     * @return the visualiser type, defaults to {@link VisualiserType#NONE}
+     */
+    VisualiserType visualiserType() default VisualiserType.NONE;
 
 }

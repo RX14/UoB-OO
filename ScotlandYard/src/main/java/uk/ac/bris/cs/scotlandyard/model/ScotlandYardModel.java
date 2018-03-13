@@ -22,17 +22,17 @@ public class ScotlandYardModel implements ScotlandYardGame {
                              PlayerConfiguration mrX,
                              PlayerConfiguration firstDetective, PlayerConfiguration... restOfTheDetectives) {
         this.rounds = Objects.requireNonNull(rounds);
-        if (rounds.isEmpty()){
+        if (rounds.isEmpty()) {
             throw new IllegalArgumentException("Rounds was empty");
         }
 
         this.graph = Objects.requireNonNull(graph);
-        if (graph.isEmpty()){
+        if (graph.isEmpty()) {
             throw new IllegalArgumentException("Graph was empty");
         }
 
         this.mrX = Objects.requireNonNull(mrX);
-        if (mrX.colour != Colour.BLACK){
+        if (mrX.colour != Colour.BLACK) {
             throw new IllegalArgumentException("MrX should be black");
         }
 
@@ -62,80 +62,80 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
-	public void registerSpectator(Spectator spectator) {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    public void registerSpectator(Spectator spectator) {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public void unregisterSpectator(Spectator spectator) {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public void unregisterSpectator(Spectator spectator) {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public void startRotate() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public void startRotate() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public Collection<Spectator> getSpectators() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public Collection<Spectator> getSpectators() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public List<Colour> getPlayers() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public List<Colour> getPlayers() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public Set<Colour> getWinningPlayers() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public Set<Colour> getWinningPlayers() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public Optional<Integer> getPlayerLocation(Colour colour) {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public Optional<Integer> getPlayerLocation(Colour colour) {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public Optional<Integer> getPlayerTickets(Colour colour, Ticket ticket) {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public Optional<Integer> getPlayerTickets(Colour colour, Ticket ticket) {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public boolean isGameOver() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public boolean isGameOver() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public Colour getCurrentPlayer() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public Colour getCurrentPlayer() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public int getCurrentRound() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public int getCurrentRound() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public List<Boolean> getRounds() {
-		// TODO
-		throw new RuntimeException("Implement me");
-	}
+    @Override
+    public List<Boolean> getRounds() {
+        // TODO
+        throw new RuntimeException("Implement me");
+    }
 
-	@Override
-	public Graph<Integer, Transport> getGraph() {
-		return graph;
-	}
+    @Override
+    public Graph<Integer, Transport> getGraph() {
+        return graph;
+    }
 
 }

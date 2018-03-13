@@ -9,37 +9,37 @@ import javafx.beans.property.SimpleObjectProperty;
 
 public class BoardProperty {
 
-	private final ObjectProperty<ScrollMode> scrollMode = new SimpleObjectProperty<>(ScrollMode.PAN);
-	private final BooleanProperty animation = new SimpleBooleanProperty(true);
-	private final BooleanProperty focusPlayer = new SimpleBooleanProperty(false);
-	private final BooleanProperty history = new SimpleBooleanProperty(false);
+    private final ObjectProperty<ScrollMode> scrollMode = new SimpleObjectProperty<>(ScrollMode.PAN);
+    private final BooleanProperty animation = new SimpleBooleanProperty(true);
+    private final BooleanProperty focusPlayer = new SimpleBooleanProperty(false);
+    private final BooleanProperty history = new SimpleBooleanProperty(false);
 
-	public ScrollMode getScrollMode() {
-		return scrollMode.get();
-	}
+    public ScrollMode getScrollMode() {
+        return scrollMode.get();
+    }
 
-	public ObjectProperty<ScrollMode> scrollModeProperty() {
-		return scrollMode;
-	}
+    public ObjectProperty<ScrollMode> scrollModeProperty() {
+        return scrollMode;
+    }
 
-	public BooleanProperty animationProperty() {
-		return animation;
-	}
+    public BooleanProperty animationProperty() {
+        return animation;
+    }
 
-	public boolean isFocusPlayer() {
-		return focusPlayer.get();
-	}
+    public boolean isFocusPlayer() {
+        return focusPlayer.get();
+    }
 
-	public BooleanProperty focusPlayerProperty() {
-		return focusPlayer;
-	}
+    public BooleanProperty focusPlayerProperty() {
+        return focusPlayer;
+    }
 
-	public boolean isHistory() {
-		return history.get();
-	}
+    public boolean isHistory() {
+        return history.get();
+    }
 
-	public BooleanProperty historyProperty() {
-		return history;
-	}
+    public BooleanProperty historyProperty() {
+        return history;
+    }
 
 }

@@ -1,7 +1,7 @@
 package uk.ac.bris.cs.scotlandyard.ui.model;
 
-public enum  Side {
+public enum Side {
 
-	MRX, DETECTIVE
+    MRX, DETECTIVE
 
 }

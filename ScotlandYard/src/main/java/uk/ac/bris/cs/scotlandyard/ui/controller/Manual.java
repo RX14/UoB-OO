@@ -26,27 +26,29 @@ import uk.ac.bris.cs.scotlandyard.ui.Utils;
 @BindFXML("layout/Manual.fxml")
 public final class Manual implements Controller {
 
-	@FXML private VBox root;
-	@FXML private WebView content;
+    @FXML
+    private VBox root;
+    @FXML
+    private WebView content;
 
-	Manual(Stage stage) {
-		Controller.bind(this);
-		try {
-			Parser parser = Parser.builder().build();
-			Node document = parser
-					.parse(Resources.toString(getResource("manual/MANUAL.md"), UTF_8));
-			HtmlRenderer renderer = HtmlRenderer.builder().build();
-			String index = Resources.toString(getResource("manual/index.html"), UTF_8);
-			String rendered = index.replace("$content$", renderer.render(document));
-			content.getEngine().loadContent(rendered);
-		} catch (IOException e) {
-			Utils.handleNonFatalException(e, "Unable to show manual");
-			stage.close();
-		}
-	}
+    Manual(Stage stage) {
+        Controller.bind(this);
+        try {
+            Parser parser = Parser.builder().build();
+            Node document = parser
+                    .parse(Resources.toString(getResource("manual/MANUAL.md"), UTF_8));
+            HtmlRenderer renderer = HtmlRenderer.builder().build();
+            String index = Resources.toString(getResource("manual/index.html"), UTF_8);
+            String rendered = index.replace("$content$", renderer.render(document));
+            content.getEngine().loadContent(rendered);
+        } catch (IOException e) {
+            Utils.handleNonFatalException(e, "Unable to show manual");
+            stage.close();
+        }
+    }
 
-	@Override
-	public Parent root() {
-		return root;
-	}
+    @Override
+    public Parent root() {
+        return root;
+    }
 }

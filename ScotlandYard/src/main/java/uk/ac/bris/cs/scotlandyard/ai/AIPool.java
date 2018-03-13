@@ -29,128 +29,128 @@ import uk.ac.bris.cs.scotlandyard.model.ScotlandYardView;
  * <b> Not a public API, do not use!</b> <br>
  * Internal pooling mechanism for AIs. AIs that are on the same group will share
  * a common GameFactory.
- * 
+ *
  * @param <G> the group, must be stable with proper {@link Object#hashCode()}
- *        and {@link Object#equals(Object)}
+ *            and {@link Object#equals(Object)}
  */
 public class AIPool<G> {
 
-	private final VisualiserSurface surface;
-	private final Consumer<Throwable> exceptionHandler;
-	private final Map<G, AIGroup> groups = new HashMap<>();
+    private final VisualiserSurface surface;
+    private final Consumer<Throwable> exceptionHandler;
+    private final Map<G, AIGroup> groups = new HashMap<>();
 
-	public AIPool(VisualiserSurface surface, Consumer<Throwable> exceptionHandler) {
-		this.surface = surface;
-		this.exceptionHandler = exceptionHandler;
-	}
+    public AIPool(VisualiserSurface surface, Consumer<Throwable> exceptionHandler) {
+        this.surface = surface;
+        this.exceptionHandler = exceptionHandler;
+    }
 
-	public void addToGroup(G group, Colour colour, AI ai) {
-		groups.computeIfAbsent(group, g -> new AIGroup()).add(colour, ai);
-	}
+    public void addToGroup(G group, Colour colour, AI ai) {
+        groups.computeIfAbsent(group, g -> new AIGroup()).add(colour, ai);
+    }
 
-	public void initialise(ResourceManager manager, ScotlandYardGame game) {
-		groups.values().forEach(group -> {
-			try {
-				group.initialise(manager, game);
-			} catch (Exception e) {
-				e.printStackTrace();
-				exceptionHandler.accept(e);
-			}
-		});
-	}
+    public void initialise(ResourceManager manager, ScotlandYardGame game) {
+        groups.values().forEach(group -> {
+            try {
+                group.initialise(manager, game);
+            } catch (Exception e) {
+                e.printStackTrace();
+                exceptionHandler.accept(e);
+            }
+        });
+    }
 
-	public Optional<Player> createPlayer(Colour colour) {
-		List<Player> created = groups.values()
-				.stream()
-				.map(group -> group.createPlayer(colour))
-				.flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
-				.collect(toList());
-		if (created.isEmpty()) return Optional.empty();
-		if (created.size() != 1)
-			throw new IllegalArgumentException(colour + " existed in multiple groups");
-		return Optional.of(created.get(0));
-	}
+    public Optional<Player> createPlayer(Colour colour) {
+        List<Player> created = groups.values()
+                .stream()
+                .map(group -> group.createPlayer(colour))
+                .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
+                .collect(toList());
+        if (created.isEmpty()) return Optional.empty();
+        if (created.size() != 1)
+            throw new IllegalArgumentException(colour + " existed in multiple groups");
+        return Optional.of(created.get(0));
+    }
 
-	public void terminate() {
-		groups.values().forEach((group) -> {
-			try {
-				group.terminate();
-			} catch (Exception e) {
-				exceptionHandler.accept(e);
-			}
-		});
-		surface.onDestroy();
-	}
+    public void terminate() {
+        groups.values().forEach((group) -> {
+            try {
+                group.terminate();
+            } catch (Exception e) {
+                exceptionHandler.accept(e);
+            }
+        });
+        surface.onDestroy();
+    }
 
-	public interface VisualiserSurface {
+    public interface VisualiserSurface {
 
-		Pane onCreate(AI ai);
+        Pane onCreate(AI ai);
 
-		void onDestroy();
+        void onDestroy();
 
-	}
+    }
 
-	class AIGroup {
+    class AIGroup {
 
-		private final Map<Colour, AI> ais = new HashMap<>();
-		private Map<AI, PlayerFactory> factories = new HashMap<>();
+        private final Map<Colour, AI> ais = new HashMap<>();
+        private Map<AI, PlayerFactory> factories = new HashMap<>();
 
-		void add(Colour colour, AI ai) {
-			ais.put(colour, ai);
-		}
+        void add(Colour colour, AI ai) {
+            ais.put(colour, ai);
+        }
 
-		void initialise(ResourceManager manager, ScotlandYardGame game) throws Exception {
-			factories = ais.values().stream()
-					.distinct()
-					.collect(toMap(Function.identity(), AI::instantiate));
-			factories.forEach((ai, factory) -> {
-				factory.createSpectators(game).forEach(game::registerSpectator);
-				Pane pane = surface.onCreate(ai);
-				factory.ready(() -> pane, manager);
-			});
-		}
+        void initialise(ResourceManager manager, ScotlandYardGame game) throws Exception {
+            factories = ais.values().stream()
+                    .distinct()
+                    .collect(toMap(Function.identity(), AI::instantiate));
+            factories.forEach((ai, factory) -> {
+                factory.createSpectators(game).forEach(game::registerSpectator);
+                Pane pane = surface.onCreate(ai);
+                factory.ready(() -> pane, manager);
+            });
+        }
 
-		void terminate() throws Exception {
-			factories.values().forEach(PlayerFactory::finish);
-		}
+        void terminate() throws Exception {
+            factories.values().forEach(PlayerFactory::finish);
+        }
 
-		public Optional<Player> createPlayer(Colour colour) {
-			if (!ais.containsKey(colour)) return Optional.empty();
-			return Optional.of(
-					new ThreadedPlayer(
-							factories.get(ais.get(colour)).createPlayer(colour),
-							exceptionHandler));
-		}
+        public Optional<Player> createPlayer(Colour colour) {
+            if (!ais.containsKey(colour)) return Optional.empty();
+            return Optional.of(
+                    new ThreadedPlayer(
+                            factories.get(ais.get(colour)).createPlayer(colour),
+                            exceptionHandler));
+        }
 
-	}
+    }
 
-	static class ThreadedPlayer implements Player {
+    static class ThreadedPlayer implements Player {
 
-		final static ExecutorService service = Executors.newWorkStealingPool();
+        final static ExecutorService service = Executors.newWorkStealingPool();
 
-		private final Player player;
-		private final Consumer<Throwable> exceptionHandler;
+        private final Player player;
+        private final Consumer<Throwable> exceptionHandler;
 
-		private ThreadedPlayer(Player player, Consumer<Throwable> exceptionHandler) {
-			this.player = player;
-			this.exceptionHandler = exceptionHandler;
-		}
+        private ThreadedPlayer(Player player, Consumer<Throwable> exceptionHandler) {
+            this.player = player;
+            this.exceptionHandler = exceptionHandler;
+        }
 
-		@Override
-		public void makeMove(ScotlandYardView view,
-				int location,
-				Set<Move> moves,
-				Consumer<Move> callback) {
-			service.submit((Callable<Void>) () -> {
-				try {
-					player.makeMove(view, location, ImmutableSet.copyOf(moves), callback);
-				} catch (Throwable e) {
-					e.printStackTrace();
-					exceptionHandler.accept(e);
-				}
-				return null;
-			});
-		}
-	}
+        @Override
+        public void makeMove(ScotlandYardView view,
+                             int location,
+                             Set<Move> moves,
+                             Consumer<Move> callback) {
+            service.submit((Callable<Void>) () -> {
+                try {
+                    player.makeMove(view, location, ImmutableSet.copyOf(moves), callback);
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    exceptionHandler.accept(e);
+                }
+                return null;
+            });
+        }
+    }
 
 }

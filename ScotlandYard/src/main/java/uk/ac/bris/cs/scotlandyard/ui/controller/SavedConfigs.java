@@ -8,12 +8,12 @@ import uk.ac.bris.cs.scotlandyard.ui.ModelConfiguration;
 
 public final class SavedConfigs implements Controller {
 
-	public SavedConfigs(Consumer<ModelConfiguration> controller) {
-		// TODO implement me
-	}
+    public SavedConfigs(Consumer<ModelConfiguration> controller) {
+        // TODO implement me
+    }
 
-	@Override
-	public Parent root() {
-		return null;
-	}
+    @Override
+    public Parent root() {
+        return null;
+    }
 }

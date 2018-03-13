@@ -40,82 +40,87 @@ import uk.ac.bris.cs.scotlandyard.ui.model.BoardProperty;
 @BindFXML(value = "layout/FindNode.fxml")
 public final class FindNode implements Controller {
 
-	private static final Joiner JOINER = Joiner.on(", ").skipNulls();
-	private static final Splitter SPLITTER = Splitter.on(' ').omitEmptyStrings().trimResults();
+    private static final Joiner JOINER = Joiner.on(", ").skipNulls();
+    private static final Splitter SPLITTER = Splitter.on(' ').omitEmptyStrings().trimResults();
 
-	@FXML private VBox root;
-	@FXML private TextField search;
-	@FXML private Button reset;
-	@FXML private Label message;
-	@FXML private StackPane mapContainer;
+    @FXML
+    private VBox root;
+    @FXML
+    private TextField search;
+    @FXML
+    private Button reset;
+    @FXML
+    private Label message;
+    @FXML
+    private StackPane mapContainer;
 
-	FindNode(BoardProperty config, Stage parent, ResourceManager manager) {
-		Controller.bind(this);
-		MapPreviewPane pane = new MapPreviewPane(manager);
-		GesturePane gesturePane = new GesturePane(pane);
-		gesturePane.scrollModeProperty().bind(config.scrollModeProperty());
-		mapContainer.getChildren().add(gesturePane);
-		EasyBind.subscribe(search.textProperty(), s -> {
-			List<String> items = SPLITTER.splitToList(s);
-			Set<Integer> highlights = new HashSet<>();
-			List<String> failed = new ArrayList<>();
-			for (String item : items) {
-				Optional<Integer> optional = maybeInteger(item)
-						.flatMap(i -> manager.getGraph().containsNode(i) ? of(i) : empty());
-				optional.ifPresent(highlights::add);
-				if (!optional.isPresent()) failed.add(item);
-			}
-			pane.highlight(highlights);
-			message.setText(!failed.isEmpty() ? "Invalid node: " + JOINER.join(failed)
-					: "Highlighting " + highlights.size() + " node(s)");
-			search.setStyle("-fx-background-color: " + (!failed.isEmpty() ? "#bc6a00" :
-					"#00aa48"));
-			if (!highlights.isEmpty()) {
-				gesturePane.animate(Duration.millis(300))
-						.interpolateWith(DecelerateInterpolator.DEFAULT)
-						.centreOn(findCentre(highlights.stream()
-								.map(manager::coordinateAtNode)
-								.collect(toList())));
+    FindNode(BoardProperty config, Stage parent, ResourceManager manager) {
+        Controller.bind(this);
+        MapPreviewPane pane = new MapPreviewPane(manager);
+        GesturePane gesturePane = new GesturePane(pane);
+        gesturePane.scrollModeProperty().bind(config.scrollModeProperty());
+        mapContainer.getChildren().add(gesturePane);
+        EasyBind.subscribe(search.textProperty(), s -> {
+            List<String> items = SPLITTER.splitToList(s);
+            Set<Integer> highlights = new HashSet<>();
+            List<String> failed = new ArrayList<>();
+            for (String item : items) {
+                Optional<Integer> optional = maybeInteger(item)
+                        .flatMap(i -> manager.getGraph().containsNode(i) ? of(i) : empty());
+                optional.ifPresent(highlights::add);
+                if (!optional.isPresent()) failed.add(item);
+            }
+            pane.highlight(highlights);
+            message.setText(!failed.isEmpty() ? "Invalid node: " + JOINER.join(failed)
+                    : "Highlighting " + highlights.size() + " node(s)");
+            search.setStyle("-fx-background-color: " + (!failed.isEmpty() ? "#bc6a00" :
+                    "#00aa48"));
+            if (!highlights.isEmpty()) {
+                gesturePane.animate(Duration.millis(300))
+                        .interpolateWith(DecelerateInterpolator.DEFAULT)
+                        .centreOn(findCentre(highlights.stream()
+                                .map(manager::coordinateAtNode)
+                                .collect(toList())));
 //				gesturePane.translateTo(
 //						findCentre(highlights.stream()
 //								.map(manager::coordinateAtNode)
 //								.collect(toList())),
 //						Duration.millis(300), () -> {});
-			}
-		});
+            }
+        });
 
-		reset.setOnAction(e -> gesturePane.zoomTo(0, Point2D.ZERO));
-	}
-
-
-	// TODO isn't this just some sort of fold?
-	private static Point2D findCentre(Collection<Point2D> points) {
-		double minX = Integer.MAX_VALUE;
-		double maxX = Integer.MIN_VALUE;
-		double minY = Integer.MAX_VALUE;
-		double maxY = Integer.MIN_VALUE;
-		for (Point2D item : points) {
-			double x = item.getX();
-			double y = item.getY();
-			maxX = Math.max(x, maxX);
-			minX = Math.min(x, minX);
-			maxY = Math.max(y, maxY);
-			minY = Math.min(y, minY);
-		}
-		return new Point2D(minX, minY).midpoint(maxX, maxY);
-	}
+        reset.setOnAction(e -> gesturePane.zoomTo(0, Point2D.ZERO));
+    }
 
 
-	private static Optional<Integer> maybeInteger(String string) {
-		try {
-			return of(Integer.valueOf(string));
-		} catch (NumberFormatException ignored) {
-			return empty();
-		}
-	}
+    // TODO isn't this just some sort of fold?
+    private static Point2D findCentre(Collection<Point2D> points) {
+        double minX = Integer.MAX_VALUE;
+        double maxX = Integer.MIN_VALUE;
+        double minY = Integer.MAX_VALUE;
+        double maxY = Integer.MIN_VALUE;
+        for (Point2D item : points) {
+            double x = item.getX();
+            double y = item.getY();
+            maxX = Math.max(x, maxX);
+            minX = Math.min(x, minX);
+            maxY = Math.max(y, maxY);
+            minY = Math.min(y, minY);
+        }
+        return new Point2D(minX, minY).midpoint(maxX, maxY);
+    }
 
-	@Override
-	public Parent root() {
-		return root;
-	}
+
+    private static Optional<Integer> maybeInteger(String string) {
+        try {
+            return of(Integer.valueOf(string));
+        } catch (NumberFormatException ignored) {
+            return empty();
+        }
+    }
+
+    @Override
+    public Parent root() {
+        return root;
+    }
 }

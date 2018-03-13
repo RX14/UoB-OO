@@ -10,35 +10,35 @@ import uk.ac.bris.cs.scotlandyard.model.Ticket;
 
 public class TicketProperty {
 
-	public final ObjectProperty<Ticket> ticket = new SimpleObjectProperty<>();
-	public final IntegerProperty count = new SimpleIntegerProperty();
+    public final ObjectProperty<Ticket> ticket = new SimpleObjectProperty<>();
+    public final IntegerProperty count = new SimpleIntegerProperty();
 
-	public TicketProperty(Ticket ticket, int count) {
-		this.ticket.set(ticket);
-		this.count.set(count);
-	}
+    public TicketProperty(Ticket ticket, int count) {
+        this.ticket.set(ticket);
+        this.count.set(count);
+    }
 
-	public Ticket ticket() {
-		return ticket.get();
-	}
+    public Ticket ticket() {
+        return ticket.get();
+    }
 
-	public ObjectProperty<Ticket> ticketProperty() {
-		return ticket;
-	}
+    public ObjectProperty<Ticket> ticketProperty() {
+        return ticket;
+    }
 
-	public int count() {
-		return count.get();
-	}
+    public int count() {
+        return count.get();
+    }
 
-	public IntegerProperty countProperty() {
-		return count;
-	}
+    public IntegerProperty countProperty() {
+        return count;
+    }
 
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				       .add("ticket", ticket)
-				       .add("count", count)
-				       .toString();
-	}
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("ticket", ticket)
+                .add("count", count)
+                .toString();
+    }
 }

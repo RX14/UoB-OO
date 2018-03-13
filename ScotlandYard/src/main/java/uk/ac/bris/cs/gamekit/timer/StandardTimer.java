@@ -6,20 +6,20 @@ import java.util.concurrent.TimeUnit;
 
 public class StandardTimer implements Timer {
 
-	private final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
+    private final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
 
-	public StandardTimer() {
-		scheduler.setRemoveOnCancelPolicy(true);
-	}
+    public StandardTimer() {
+        scheduler.setRemoveOnCancelPolicy(true);
+    }
 
-	@Override
-	public ScheduledFuture<?> schedule(long duration, TimeUnit unit, Runnable runnable) {
-		return scheduler.schedule(runnable, duration, unit);
-	}
+    @Override
+    public ScheduledFuture<?> schedule(long duration, TimeUnit unit, Runnable runnable) {
+        return scheduler.schedule(runnable, duration, unit);
+    }
 
-	@Override
-	public void stopAll() {
-		scheduler.getQueue().stream().map(ScheduledFuture.class::cast)
-				.forEachOrdered(sf -> sf.cancel(true));
-	}
+    @Override
+    public void stopAll() {
+        scheduler.getQueue().stream().map(ScheduledFuture.class::cast)
+                .forEachOrdered(sf -> sf.cancel(true));
+    }
 }

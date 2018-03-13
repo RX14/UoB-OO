@@ -13,46 +13,46 @@ import javafx.scene.layout.Pane;
  */
 public class CoverPane extends Pane implements ChangeListener<Bounds> {
 
-	private final ChangeListener<Bounds> boundChanged = (o, p,
-			c) -> resizeAllChildren(getLayoutBounds());
+    private final ChangeListener<Bounds> boundChanged = (o, p,
+                                                         c) -> resizeAllChildren(getLayoutBounds());
 
-	{
-		setCacheHint(CacheHint.QUALITY);
-		layoutBoundsProperty().addListener(this);
-		getChildren().addListener(new WeakListChangeListener<>(c -> {
-			while (c.next()) {
-				if (c.wasRemoved()) c.getRemoved()
-						.forEach(n -> n.layoutBoundsProperty().removeListener(boundChanged));
-				if (c.wasAdded()) c.getAddedSubList()
-						.forEach(n -> n.layoutBoundsProperty().addListener(boundChanged));
-			}
-		}));
-	}
+    {
+        setCacheHint(CacheHint.QUALITY);
+        layoutBoundsProperty().addListener(this);
+        getChildren().addListener(new WeakListChangeListener<>(c -> {
+            while (c.next()) {
+                if (c.wasRemoved()) c.getRemoved()
+                        .forEach(n -> n.layoutBoundsProperty().removeListener(boundChanged));
+                if (c.wasAdded()) c.getAddedSubList()
+                        .forEach(n -> n.layoutBoundsProperty().addListener(boundChanged));
+            }
+        }));
+    }
 
-	@Override
-	public void changed(ObservableValue<? extends Bounds> o, Bounds p, Bounds c) {
-		if (c != null) resizeAllChildren(c);
-	}
+    @Override
+    public void changed(ObservableValue<? extends Bounds> o, Bounds p, Bounds c) {
+        if (c != null) resizeAllChildren(c);
+    }
 
-	private void resizeAllChildren(Bounds bounds) {
-		getChildren().forEach(n -> resizeNode(n, bounds));
-	}
+    private void resizeAllChildren(Bounds bounds) {
+        getChildren().forEach(n -> resizeNode(n, bounds));
+    }
 
-	private static void resizeNode(Node node, Bounds bounds) {
-		Bounds nodeBounds = node.getLayoutBounds();
-		double minScale = Math.min(bounds.getWidth() / nodeBounds.getWidth(),
-				bounds.getHeight() / nodeBounds.getHeight());
+    private static void resizeNode(Node node, Bounds bounds) {
+        Bounds nodeBounds = node.getLayoutBounds();
+        double minScale = Math.min(bounds.getWidth() / nodeBounds.getWidth(),
+                bounds.getHeight() / nodeBounds.getHeight());
 
-		node.setTranslateX(bounds.getWidth() / 2 - nodeBounds.getWidth() / 2);
-		node.setTranslateY(bounds.getHeight() / 2 - nodeBounds.getHeight() / 2);
+        node.setTranslateX(bounds.getWidth() / 2 - nodeBounds.getWidth() / 2);
+        node.setTranslateY(bounds.getHeight() / 2 - nodeBounds.getHeight() / 2);
 
-		if (minScale > 0) {
-			// node.setTranslateX(-(nodeBounds.getWidth() -
-			// nodeBounds.getWidth() * minScale) / 2);
-			// node.setTranslateY(-(nodeBounds.getHeight() -
-			// nodeBounds.getHeight() * minScale) / 2);
-			node.setScaleX(minScale);
-			node.setScaleY(minScale);
-		}
-	}
+        if (minScale > 0) {
+            // node.setTranslateX(-(nodeBounds.getWidth() -
+            // nodeBounds.getWidth() * minScale) / 2);
+            // node.setTranslateY(-(nodeBounds.getHeight() -
+            // nodeBounds.getHeight() * minScale) / 2);
+            node.setScaleX(minScale);
+            node.setScaleY(minScale);
+        }
+    }
 }

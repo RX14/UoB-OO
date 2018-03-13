@@ -10,15 +10,15 @@ import uk.ac.bris.cs.scotlandyard.ui.controller.LocalGame;
  */
 public final class Main extends Application {
 
-	public static void main(String[] args) {
-		launch(args);
-	}
+    public static void main(String[] args) {
+        launch(args);
+    }
 
-	@Override
-	public void start(Stage primaryStage) {
-		Thread.currentThread().setUncaughtExceptionHandler(
-				(thread, throwable) -> Utils.handleFatalException(throwable));
-		LocalGame.newGame(Utils.setupResources(), primaryStage, false);
-	}
+    @Override
+    public void start(Stage primaryStage) {
+        Thread.currentThread().setUncaughtExceptionHandler(
+                (thread, throwable) -> Utils.handleFatalException(throwable));
+        LocalGame.newGame(Utils.setupResources(), primaryStage, false);
+    }
 
 }

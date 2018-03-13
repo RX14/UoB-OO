@@ -10,13 +10,13 @@ import uk.ac.bris.cs.scotlandyard.ui.model.PlayerProperty;
 
 public interface ModelConfiguration {
 
-	ObjectProperty<Duration> timeoutProperty();
+    ObjectProperty<Duration> timeoutProperty();
 
-	ObservableList<Boolean> revealRounds();
+    ObservableList<Boolean> revealRounds();
 
-	ObjectProperty<Graph<Integer, Transport>> graphProperty();
+    ObjectProperty<Graph<Integer, Transport>> graphProperty();
 
-	ObservableList<PlayerProperty> allPlayers();
+    ObservableList<PlayerProperty> allPlayers();
 
-	ObservableList<PlayerProperty> players();
+    ObservableList<PlayerProperty> players();
 }

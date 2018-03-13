@@ -27,290 +27,298 @@ import static uk.ac.bris.cs.scotlandyard.model.Colour.RED;
  */
 public class ModelPlayerTest extends ParameterisedModelTestBase {
 
-	private TestHarness harness;
-	@Before public void initialise() { harness = new TestHarness(); }
-	@After public void tearDown() { harness.forceReleaseShutdownLock(); }
+    private TestHarness harness;
 
-	@Test
-	public void testDetectivePassMoveDoesNotAffectMrX() {
-		PlayerConfiguration black = harness.newPlayer(BLACK, 45,
-				2, 0, 0, 0, 0);
-		PlayerConfiguration red = harness.newPlayer(RED, 111, 2, 0, 0, 0, 0);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 0, 0, 0, 0, 0);
+    @Before
+    public void initialise() {
+        harness = new TestHarness();
+    }
 
-		ScotlandYardGame game = createGame(ofRounds(23, DEFAULT_REVEAL), black, red, blue);
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)),
-				player(RED).makeMove().willPick(taxi(112)),
-				player(BLUE).makeMove().willPick(pass()))
-				.thenRequire(ticketCountIs(BLACK, 2, 0, 0, 0, 0))
-				.thenRequire(ticketCountIs(RED, 1, 0, 0, 0, 0))
-				.thenRequire(ticketCountIs(BLUE, 0, 0, 0, 0, 0))
-				.thenAssertNoFurtherInteractions();
-	}
+    @After
+    public void tearDown() {
+        harness.forceReleaseShutdownLock();
+    }
 
-	@Test
-	public void testDetectiveTicketsGivenToMrXOnlyAfterUse() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45, 1, 1, 1, 0, 0);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 2, 0, 0, 0, 0);
+    @Test
+    public void testDetectivePassMoveDoesNotAffectMrX() {
+        PlayerConfiguration black = harness.newPlayer(BLACK, 45,
+                2, 0, 0, 0, 0);
+        PlayerConfiguration red = harness.newPlayer(RED, 111, 2, 0, 0, 0, 0);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 0, 0, 0, 0, 0);
 
-		ScotlandYardGame game = createGame(mrX, blue);
+        ScotlandYardGame game = createGame(ofRounds(23, DEFAULT_REVEAL), black, red, blue);
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)),
+                player(RED).makeMove().willPick(taxi(112)),
+                player(BLUE).makeMove().willPick(pass()))
+                .thenRequire(ticketCountIs(BLACK, 2, 0, 0, 0, 0))
+                .thenRequire(ticketCountIs(RED, 1, 0, 0, 0, 0))
+                .thenRequire(ticketCountIs(BLUE, 0, 0, 0, 0, 0))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		// blue taxi ticket given to black
-		// NOTE: black uses the last taxi ticket but was given another one from
-		// blue so the total taxi ticket for MrX is one
+    @Test
+    public void testDetectiveTicketsGivenToMrXOnlyAfterUse() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45, 1, 1, 1, 0, 0);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 2, 0, 0, 0, 0);
 
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)),
-				player(BLUE).makeMove().willPick(taxi(95)))
-				.thenRequire(ticketCountIs(BLACK, 1, 1, 1, 0, 0))
-				.thenRequire(ticketCountIs(BLUE, 1, 0, 0, 0, 0))
-				.thenAssertNoFurtherInteractions();
-	}
+        ScotlandYardGame game = createGame(mrX, blue);
 
-	@Test
-	public void testMrXMovesToDestinationAfterDoubleMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45, 2, 1, 1, 1, 0);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 2, 0, 0, 0, 0);
+        // blue taxi ticket given to black
+        // NOTE: black uses the last taxi ticket but was given another one from
+        // blue so the total taxi ticket for MrX is one
 
-		ScotlandYardGame game = createGame(asList(true, true, true), mrX, blue);
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)),
+                player(BLUE).makeMove().willPick(taxi(95)))
+                .thenRequire(ticketCountIs(BLACK, 1, 1, 1, 0, 0))
+                .thenRequire(ticketCountIs(BLUE, 1, 0, 0, 0, 0))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		// black should move from 45 to 46 to 47
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(x2(taxi(46), taxi(47))),
-				player(BLUE).makeMove().willPick(taxi(95)))
-				.thenRequire(playerIsAt(BLACK, 47))
-				.thenAssertNoFurtherInteractions();
-	}
+    @Test
+    public void testMrXMovesToDestinationAfterDoubleMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45, 2, 1, 1, 1, 0);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 2, 0, 0, 0, 0);
 
-	@Test
-	public void testMrXCorrectTicketDecrementsAfterDoubleMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45,
-				1, 1, 0, 1, 0);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        ScotlandYardGame game = createGame(asList(true, true, true), mrX, blue);
 
-		ScotlandYardGame game = createGame(mrX, blue);
+        // black should move from 45 to 46 to 47
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(x2(taxi(46), taxi(47))),
+                player(BLUE).makeMove().willPick(taxi(95)))
+                .thenRequire(playerIsAt(BLACK, 47))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		// taxi, bus, and double tickets should decrement by 1
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(x2(taxi(46), bus(34))))
-				.thenRequire(ticketCountIs(BLACK, 0, 0, 0, 0, 0))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+    @Test
+    public void testMrXCorrectTicketDecrementsAfterDoubleMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45,
+                1, 1, 0, 1, 0);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testMrXMovesToDestinationAfterTicketMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45,
-				1, 0, 0, 0, 0);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        ScotlandYardGame game = createGame(mrX, blue);
 
-		// MrX reveals himself for all rounds
-		ScotlandYardGame game = createGame(asList(true, true), mrX, blue);
+        // taxi, bus, and double tickets should decrement by 1
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(x2(taxi(46), bus(34))))
+                .thenRequire(ticketCountIs(BLACK, 0, 0, 0, 0, 0))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-		// black should move from 45 to 46
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)),
-				player(BLUE).makeMove().willPick(taxi(95)))
-				.thenRequire(playerIsAt(BLACK, 46))
-				.thenAssertNoFurtherInteractions();
-	}
+    @Test
+    public void testMrXMovesToDestinationAfterTicketMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45,
+                1, 0, 0, 0, 0);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testMrXCorrectTicketDecrementsByOneAfterTicketMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45, 1, 0, 0, 0, 0);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        // MrX reveals himself for all rounds
+        ScotlandYardGame game = createGame(asList(true, true), mrX, blue);
 
-		ScotlandYardGame game = createGame(mrX, blue);
+        // black should move from 45 to 46
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)),
+                player(BLUE).makeMove().willPick(taxi(95)))
+                .thenRequire(playerIsAt(BLACK, 46))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		// taxi should decrement by 1
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)))
-				.thenRequire(ticketCountIs(BLACK, 0, 0, 0, 0, 0))
-				.thenIgnoreAnyFurtherInteractions();
-	}
+    @Test
+    public void testMrXCorrectTicketDecrementsByOneAfterTicketMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45, 1, 0, 0, 0, 0);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testDetectiveMovesToDestinationAfterTicketMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 1, 2, 3, 0, 0);
+        ScotlandYardGame game = createGame(mrX, blue);
 
-		ScotlandYardGame game = createGame(mrX, blue);
+        // taxi should decrement by 1
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)))
+                .thenRequire(ticketCountIs(BLACK, 0, 0, 0, 0, 0))
+                .thenIgnoreAnyFurtherInteractions();
+    }
 
-		// blue should move from 94 to 95
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)),
-				player(BLUE).makeMove().willPick(taxi(95)))
-				.thenRequire(playerIsAt(BLUE, 95))
-				.thenAssertNoFurtherInteractions();
-	}
+    @Test
+    public void testDetectiveMovesToDestinationAfterTicketMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 1, 2, 3, 0, 0);
 
-	@Test
-	public void testDetectiveCorrectTicketDecrementsByOneAfterTicketMove() {
-		// X 45 TAXI -> 46
-		// B 94
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 2, 2, 3, 0, 0);
+        ScotlandYardGame game = createGame(mrX, blue);
 
-		ScotlandYardGame game = createGame(mrX, blue);
+        // blue should move from 94 to 95
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)),
+                player(BLUE).makeMove().willPick(taxi(95)))
+                .thenRequire(playerIsAt(BLUE, 95))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		// taxi should decrement by 1
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)),
-				player(BLUE).makeMove().willPick(taxi(95)))
-				.thenRequire(ticketCountIs(BLUE, 1, 2, 3, 0, 0))
-				.thenAssertNoFurtherInteractions();
-	}
+    @Test
+    public void testDetectiveCorrectTicketDecrementsByOneAfterTicketMove() {
+        // X 45 TAXI -> 46
+        // B 94
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94, 2, 2, 3, 0, 0);
 
-	@Test
-	public void testDetectiveLocationHoldsAfterPassMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration red = harness.newPlayer(RED, 111);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94, noTickets());
+        ScotlandYardGame game = createGame(mrX, blue);
 
-		ScotlandYardGame game = createGame(mrX, red, blue);
+        // taxi should decrement by 1
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)),
+                player(BLUE).makeMove().willPick(taxi(95)))
+                .thenRequire(ticketCountIs(BLUE, 1, 2, 3, 0, 0))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		// blue doesn't move
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)),
-				player(RED).makeMove().willPick(taxi(112)),
-				player(BLUE).makeMove().willPick(pass()))
-				.thenRequire(playerIsAt(BLUE, 94))
-				.thenAssertNoFurtherInteractions();
-	}
+    @Test
+    public void testDetectiveLocationHoldsAfterPassMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration red = harness.newPlayer(RED, 111);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94, noTickets());
 
-	@Test
-	public void testDetectiveTicketCountHoldsAfterPassMove() {
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
-		PlayerConfiguration red = harness.newPlayer(RED, 111);
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94, noTickets());
+        ScotlandYardGame game = createGame(mrX, red, blue);
 
-		ScotlandYardGame game = createGame(mrX, red, blue);
+        // blue doesn't move
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)),
+                player(RED).makeMove().willPick(taxi(112)),
+                player(BLUE).makeMove().willPick(pass()))
+                .thenRequire(playerIsAt(BLUE, 94))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
-				player(BLACK).makeMove().willPick(taxi(46)),
-				player(RED).makeMove().willPick(taxi(112)),
-				player(BLUE).makeMove().willPick(pass()))
-				.thenRequire(ticketCountIs(BLUE, 0, 0, 0, 0, 0))
-				.thenAssertNoFurtherInteractions();
-	}
+    @Test
+    public void testDetectiveTicketCountHoldsAfterPassMove() {
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        PlayerConfiguration red = harness.newPlayer(RED, 111);
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94, noTickets());
 
-	@Test
-	public void testDetectiveLocationAlwaysCorrect() {
-		// 45 -> 46 -> 47
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        ScotlandYardGame game = createGame(mrX, red, blue);
 
-		// 94 -> 93 -> 92
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        harness.play(game).startRotationAndAssertTheseInteractionsOccurInOrder(
+                player(BLACK).makeMove().willPick(taxi(46)),
+                player(RED).makeMove().willPick(taxi(112)),
+                player(BLUE).makeMove().willPick(pass()))
+                .thenRequire(ticketCountIs(BLUE, 0, 0, 0, 0, 0))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		ScotlandYardGame game = createGame(asList(true, false, true), mrX, blue);
+    @Test
+    public void testDetectiveLocationAlwaysCorrect() {
+        // 45 -> 46 -> 47
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
 
-		harness.play(game)
-				.thenRequire(playerIsAt(BLUE, 94))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(46)),
-						player(BLUE).makeMove().willPick(taxi(93)))
-				.thenRequire(playerIsAt(BLUE, 93))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(47)),
-						player(BLUE).makeMove().willPick(taxi(92)))
-				.thenRequire(playerIsAt(BLUE, 92))
-				.thenAssertNoFurtherInteractions();
-	}
+        // 94 -> 93 -> 92
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testMrXLocationCorrectOnRevealRound() {
-		// 45 -> 46 -> 47
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        ScotlandYardGame game = createGame(asList(true, false, true), mrX, blue);
 
-		// 94 -> 93 -> 92
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        harness.play(game)
+                .thenRequire(playerIsAt(BLUE, 94))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(46)),
+                        player(BLUE).makeMove().willPick(taxi(93)))
+                .thenRequire(playerIsAt(BLUE, 93))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(47)),
+                        player(BLUE).makeMove().willPick(taxi(92)))
+                .thenRequire(playerIsAt(BLUE, 92))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		ScotlandYardGame game = createGame(asList(true, true, true), mrX, blue);
+    @Test
+    public void testMrXLocationCorrectOnRevealRound() {
+        // 45 -> 46 -> 47
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
 
-		// Mr X's location should be available after every reveal round, but not at the play of the
-		// game
-		harness.play(game)
-				.thenRequire(playerIsAt(BLACK, 0))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(46)),
-						player(BLUE).makeMove().willPick(taxi(93)))
-				.thenRequire(playerIsAt(BLACK, 46))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(47)),
-						player(BLUE).makeMove().willPick(taxi(92)))
-				.thenRequire(playerIsAt(BLACK, 47))
-				.thenAssertNoFurtherInteractions();
-	}
+        // 94 -> 93 -> 92
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testMrXLocationIsHisLastRevealLocationOnHiddenRound() {
-		// 45 -> 46 -> 47 -> 62 -> 79
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        ScotlandYardGame game = createGame(asList(true, true, true), mrX, blue);
 
-		// 94 -> 93 -> 92 -> 73 -> 57
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        // Mr X's location should be available after every reveal round, but not at the play of the
+        // game
+        harness.play(game)
+                .thenRequire(playerIsAt(BLACK, 0))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(46)),
+                        player(BLUE).makeMove().willPick(taxi(93)))
+                .thenRequire(playerIsAt(BLACK, 46))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(47)),
+                        player(BLUE).makeMove().willPick(taxi(92)))
+                .thenRequire(playerIsAt(BLACK, 47))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		ScotlandYardGame game = createGame(asList(true, false, false, true), mrX, blue);
+    @Test
+    public void testMrXLocationIsHisLastRevealLocationOnHiddenRound() {
+        // 45 -> 46 -> 47 -> 62 -> 79
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
 
-		// Mr X's location should be available after every reveal round, but otherwise give his
-		// previous location
-		harness.play(game)
-				.thenRequire(playerIsAt(BLACK, 0))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(46)),
-						player(BLUE).makeMove().willPick(taxi(93)))
-				.thenRequire(playerIsAt(BLACK, 46))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(47)),
-						player(BLUE).makeMove().willPick(taxi(92)))
-				.thenRequire(playerIsAt(BLACK, 46))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(62)),
-						player(BLUE).makeMove().willPick(taxi(73)))
-				.thenRequire(playerIsAt(BLACK, 46))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(79)),
-						player(BLUE).makeMove().willPick(taxi(57)))
-				.thenRequire(playerIsAt(BLACK, 79))
-				.thenAssertNoFurtherInteractions();
-	}
+        // 94 -> 93 -> 92 -> 73 -> 57
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testMrXLocationCorrectWithOneRevealRound() {
-		// 45 -> 46
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        ScotlandYardGame game = createGame(asList(true, false, false, true), mrX, blue);
 
-		// 94 -> 93
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        // Mr X's location should be available after every reveal round, but otherwise give his
+        // previous location
+        harness.play(game)
+                .thenRequire(playerIsAt(BLACK, 0))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(46)),
+                        player(BLUE).makeMove().willPick(taxi(93)))
+                .thenRequire(playerIsAt(BLACK, 46))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(47)),
+                        player(BLUE).makeMove().willPick(taxi(92)))
+                .thenRequire(playerIsAt(BLACK, 46))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(62)),
+                        player(BLUE).makeMove().willPick(taxi(73)))
+                .thenRequire(playerIsAt(BLACK, 46))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(79)),
+                        player(BLUE).makeMove().willPick(taxi(57)))
+                .thenRequire(playerIsAt(BLACK, 79))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		ScotlandYardGame game = createGame(singletonList(true), mrX, blue);
+    @Test
+    public void testMrXLocationCorrectWithOneRevealRound() {
+        // 45 -> 46
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
 
-		harness.play(game)
-				.thenRequire(playerIsAt(BLACK, 0))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(46)),
-						player(BLUE).makeMove().willPick(taxi(93)))
-				.thenRequire(playerIsAt(BLACK, 46))
-				.thenAssertNoFurtherInteractions();
-	}
+        // 94 -> 93
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
 
-	@Test
-	public void testMrXLocationCorrectWithOneHiddenRound() {
-		// 45 -> 46
-		PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
+        ScotlandYardGame game = createGame(singletonList(true), mrX, blue);
 
-		// 94 -> 93
-		PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+        harness.play(game)
+                .thenRequire(playerIsAt(BLACK, 0))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(46)),
+                        player(BLUE).makeMove().willPick(taxi(93)))
+                .thenRequire(playerIsAt(BLACK, 46))
+                .thenAssertNoFurtherInteractions();
+    }
 
-		ScotlandYardGame game = createGame(singletonList(false), mrX, blue);
+    @Test
+    public void testMrXLocationCorrectWithOneHiddenRound() {
+        // 45 -> 46
+        PlayerConfiguration mrX = harness.newPlayer(BLACK, 45);
 
-		harness.play(game)
-				.thenRequire(playerIsAt(BLACK, 0))
-				.startRotationAndAssertTheseInteractionsOccurInOrder(
-						player(BLACK).makeMove().willPick(taxi(46)),
-						player(BLUE).makeMove().willPick(taxi(93)))
-				.thenRequire(playerIsAt(BLACK, 0))
-				.thenAssertNoFurtherInteractions();
-	}
+        // 94 -> 93
+        PlayerConfiguration blue = harness.newPlayer(BLUE, 94);
+
+        ScotlandYardGame game = createGame(singletonList(false), mrX, blue);
+
+        harness.play(game)
+                .thenRequire(playerIsAt(BLACK, 0))
+                .startRotationAndAssertTheseInteractionsOccurInOrder(
+                        player(BLACK).makeMove().willPick(taxi(46)),
+                        player(BLUE).makeMove().willPick(taxi(93)))
+                .thenRequire(playerIsAt(BLACK, 0))
+                .thenAssertNoFurtherInteractions();
+    }
 
 }

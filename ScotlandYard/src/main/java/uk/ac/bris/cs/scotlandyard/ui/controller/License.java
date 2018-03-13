@@ -20,25 +20,28 @@ import uk.ac.bris.cs.fxkit.Controller;
 @BindFXML("layout/License.fxml")
 public final class License implements Controller {
 
-	@FXML private VBox root;
-	@FXML private TextArea content;
-	@FXML private Button dismiss;
+    @FXML
+    private VBox root;
+    @FXML
+    private TextArea content;
+    @FXML
+    private Button dismiss;
 
-	License(Stage stage) {
-		Controller.bind(this);
-		try {
-			String license = Resources.toString(getClass().getResource("/LICENSE.txt"),
-					StandardCharsets.UTF_8);
-			content.setText(license);
+    License(Stage stage) {
+        Controller.bind(this);
+        try {
+            String license = Resources.toString(getClass().getResource("/LICENSE.txt"),
+                    StandardCharsets.UTF_8);
+            content.setText(license);
 
-			dismiss.setOnAction(e -> stage.close());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+            dismiss.setOnAction(e -> stage.close());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	public Parent root() {
-		return root;
-	}
+    @Override
+    public Parent root() {
+        return root;
+    }
 }
