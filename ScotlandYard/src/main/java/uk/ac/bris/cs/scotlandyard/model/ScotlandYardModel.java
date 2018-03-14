@@ -128,7 +128,9 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
-    public List<Boolean> getRounds(){ return rounds; }
+    public List<Boolean> getRounds() {
+        return rounds;
+    }
 
     @Override
     public Graph<Integer, Transport> getGraph() {
