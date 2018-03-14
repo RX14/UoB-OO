@@ -128,10 +128,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
-    public List<Boolean> getRounds() {
-        // TODO
-        throw new RuntimeException("Implement me");
-    }
+    public List<Boolean> getRounds(){ return rounds; }
 
     @Override
     public Graph<Integer, Transport> getGraph() {
