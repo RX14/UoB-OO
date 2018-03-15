@@ -20,6 +20,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final List<PlayerConfiguration> detectives = new ArrayList<>();
     private final List<ScotlandYardPlayer> players;
     private final List<Spectator> spectators = new ArrayList<>();
+    private int currentRound = 0;
 
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
@@ -118,8 +119,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Set<Colour> getWinningPlayers() {
-        // TODO
-        throw new RuntimeException("Implement me");
+        return Collections.emptySet();
     }
 
     @Override
@@ -140,8 +140,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public boolean isGameOver() {
-        // TODO
-        throw new RuntimeException("Implement me");
+        return false;
     }
 
     @Override
@@ -152,8 +151,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public int getCurrentRound() {
-        // TODO
-        throw new RuntimeException("Implement me");
+        return currentRound;
     }
 
     @Override
