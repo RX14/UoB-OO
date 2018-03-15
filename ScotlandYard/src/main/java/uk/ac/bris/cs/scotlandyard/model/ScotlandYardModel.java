@@ -4,6 +4,7 @@ import java.util.*;
 
 import com.google.common.collect.Streams;
 import uk.ac.bris.cs.gamekit.graph.Graph;
+import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -127,12 +128,12 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public List<Boolean> getRounds() {
-        return rounds;
+        return Collections.unmodifiableList(rounds);
     }
 
     @Override
     public Graph<Integer, Transport> getGraph() {
-        return graph;
+        return new ImmutableGraph<>(graph);
     }
 
 }
