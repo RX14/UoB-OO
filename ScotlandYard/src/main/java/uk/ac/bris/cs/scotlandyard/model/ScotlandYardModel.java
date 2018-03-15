@@ -1,13 +1,9 @@
 package uk.ac.bris.cs.scotlandyard.model;
 
-import java.util.*;
-
-import com.google.common.collect.Streams;
 import uk.ac.bris.cs.gamekit.graph.Graph;
 import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -114,7 +110,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public List<Colour> getPlayers() {
-        return players.stream().map(player -> player.colour()).collect(Collectors.toList());
+        List<Colour> playerColours = players.stream()
+                .sorted(Comparator.comparingInt(player -> player.colour().ordinal()))
+                .map(player -> player.colour())
+                .collect(Collectors.toList());
+        return Collections.unmodifiableList(playerColours);
     }
 
     @Override
