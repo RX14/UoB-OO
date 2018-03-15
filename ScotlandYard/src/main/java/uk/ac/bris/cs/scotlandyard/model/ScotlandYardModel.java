@@ -16,7 +16,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final List<Boolean> rounds;
     private final Graph<Integer, Transport> graph;
     private final PlayerConfiguration mrX;
-    private final List<PlayerConfiguration> detectives;
+    private final List<PlayerConfiguration> detectives = new ArrayList<>();
     private final List<Spectator> spectators = new ArrayList<>();
 
     public ScotlandYardModel(List<Boolean> rounds,
@@ -38,20 +38,36 @@ public class ScotlandYardModel implements ScotlandYardGame {
             throw new IllegalArgumentException("MrX should be black");
         }
 
-        this.detectives = new ArrayList<>();
         detectives.add(Objects.requireNonNull(firstDetective));
         detectives.addAll(Arrays.asList(Objects.requireNonNull(restOfTheDetectives)));
 
         detectives.forEach(detective -> Objects.requireNonNull(detective));
 
-        List<PlayerConfiguration> allPlayers = new ArrayList<>(detectives);
-        allPlayers.add(mrX);
-        if (duplicates(allPlayers.stream().map(player -> player.colour))) {
+        List<PlayerConfiguration> playerConfigurations = new ArrayList<>(detectives);
+        playerConfigurations.add(mrX);
+        if (duplicates(playerConfigurations.stream().map(player -> player.colour))) {
             throw new IllegalArgumentException("Duplicate player colour");
         }
-        if (duplicates(allPlayers.stream().map(player -> player.location))) {
+        if (duplicates(playerConfigurations.stream().map(player -> player.location))) {
             throw new IllegalArgumentException("Duplicate player location");
         }
+
+        playerConfigurations.forEach(player -> {
+            for (Ticket ticket : Ticket.values()) {
+                if (!player.tickets.containsKey(ticket)) {
+                    throw new IllegalArgumentException("Player " + player + " does not have ticket type " + ticket);
+                }
+            }
+        });
+
+        detectives.forEach(detective -> {
+            if (detective.tickets.get(Ticket.SECRET) != 0) {
+                throw new IllegalArgumentException("Detective " + detective + " has a secret ticket, but shouldn't");
+            }
+            if (detective.tickets.get(Ticket.DOUBLE) != 0) {
+                throw new IllegalArgumentException("Detective " + detective + " has a double ticket, but shouldn't");
+            }
+        });
     }
 
     private <T> boolean duplicates(Stream<T> stream) {
