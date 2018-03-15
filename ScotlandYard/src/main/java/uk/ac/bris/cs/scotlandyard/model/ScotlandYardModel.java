@@ -16,6 +16,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final Graph<Integer, Transport> graph;
     private final PlayerConfiguration mrX;
     private final List<PlayerConfiguration> detectives;
+    private final List<Spectator> spectators = new ArrayList<>();
 
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
@@ -63,14 +64,12 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void registerSpectator(Spectator spectator) {
-        // TODO
-        throw new RuntimeException("Implement me");
+        spectators.add(spectator);
     }
 
     @Override
     public void unregisterSpectator(Spectator spectator) {
-        // TODO
-        throw new RuntimeException("Implement me");
+        spectators.remove(spectator);
     }
 
     @Override
@@ -81,8 +80,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Collection<Spectator> getSpectators() {
-        // TODO
-        throw new RuntimeException("Implement me");
+        return spectators;
     }
 
     @Override
