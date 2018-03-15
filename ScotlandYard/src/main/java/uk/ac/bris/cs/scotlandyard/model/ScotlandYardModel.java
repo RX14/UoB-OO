@@ -8,6 +8,7 @@ import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // TODO implement all methods and pass all tests
@@ -17,6 +18,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final Graph<Integer, Transport> graph;
     private final PlayerConfiguration mrX;
     private final List<PlayerConfiguration> detectives = new ArrayList<>();
+    private final List<ScotlandYardPlayer> players;
     private final List<Spectator> spectators = new ArrayList<>();
 
     public ScotlandYardModel(List<Boolean> rounds,
@@ -60,6 +62,15 @@ public class ScotlandYardModel implements ScotlandYardGame {
             }
         });
 
+        players = playerConfigurations.stream().map(playerConfiguration ->
+                new ScotlandYardPlayer(
+                        playerConfiguration.player,
+                        playerConfiguration.colour,
+                        playerConfiguration.location,
+                        playerConfiguration.tickets
+                )
+        ).collect(Collectors.toList());
+
         detectives.forEach(detective -> {
             if (detective.tickets.get(Ticket.SECRET) != 0) {
                 throw new IllegalArgumentException("Detective " + detective + " has a secret ticket, but shouldn't");
@@ -102,8 +113,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public List<Colour> getPlayers() {
-        // TODO
-        throw new RuntimeException("Implement me");
+        return players.stream().map(player -> player.colour()).collect(Collectors.toList());
     }
 
     @Override
