@@ -17,6 +17,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final List<ScotlandYardPlayer> players;
     private final List<Spectator> spectators = new ArrayList<>();
     private int currentRound = 0;
+    private int currentPlayer = 0;
 
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
@@ -43,7 +44,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         detectives.forEach(detective -> Objects.requireNonNull(detective));
 
         List<PlayerConfiguration> playerConfigurations = new ArrayList<>(detectives);
-        playerConfigurations.add(mrX);
+        playerConfigurations.add(0,mrX);
         if (duplicates(playerConfigurations.stream().map(player -> player.colour))) {
             throw new IllegalArgumentException("Duplicate player colour");
         }
@@ -68,6 +69,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 )
         ).collect(Collectors.toList());
 
+
         detectives.forEach(detective -> {
             if (detective.tickets.get(Ticket.SECRET) != 0) {
                 throw new IllegalArgumentException("Detective " + detective + " has a secret ticket, but shouldn't");
@@ -89,11 +91,21 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void registerSpectator(Spectator spectator) {
+        if (spectator == null){
+            throw new NullPointerException("The spectator is null");
+        }
         spectators.add(spectator);
     }
 
     @Override
     public void unregisterSpectator(Spectator spectator) {
+        if (spectator == null){
+        throw new NullPointerException("Not sure what's happening");
+    }
+        if (spectators.isEmpty()){
+            throw new IllegalArgumentException("There are no spectators to remove");
+        }
+
         spectators.remove(spectator);
     }
 
@@ -105,7 +117,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Collection<Spectator> getSpectators() {
-        return spectators;
+        return Collections.unmodifiableList(spectators);
     }
 
     @Override
@@ -114,8 +126,6 @@ public class ScotlandYardModel implements ScotlandYardGame {
         List<Colour> playerColours = players.stream()
                 .map(player -> player.colour())
                 .collect(Collectors.toList());
-        playerColours.remove(Colour.BLACK);
-        playerColours.add(0,Colour.BLACK);
         return Collections.unmodifiableList(playerColours);
 
     }
@@ -153,7 +163,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Colour getCurrentPlayer() {
-        return this.getPlayers().get(0);
+        return this.getPlayers().get(currentPlayer);
     }
 
     @Override
