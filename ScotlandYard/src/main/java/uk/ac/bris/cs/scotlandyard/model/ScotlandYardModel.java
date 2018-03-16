@@ -18,6 +18,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final List<Spectator> spectators = new ArrayList<>();
     private int currentRound = 0;
     private int currentPlayer = 0;
+    private int mrxLastlocation = 0;
 
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
@@ -138,12 +139,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return Collections.emptySet();
     }
 
+
+
+
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
+        if (getCurrentRound() == 3 || getCurrentRound() == 8 || getCurrentRound() == 12){
+                    mrxLastlocation = players.get(0).location();
+        }
         if (colour == Colour.BLACK) {
-            if (currentRound < 3) {
-                return Optional.of(0);
-            }
+                return Optional.of(mrxLastlocation);
         }
         return players.stream()
                 .filter(player -> player.colour() == colour)
