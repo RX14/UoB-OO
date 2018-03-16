@@ -110,11 +110,14 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public List<Colour> getPlayers() {
+
         List<Colour> playerColours = players.stream()
-                .sorted(Comparator.comparingInt(player -> player.colour().ordinal()))
                 .map(player -> player.colour())
                 .collect(Collectors.toList());
+        playerColours.remove(Colour.BLACK);
+        playerColours.add(0,Colour.BLACK);
         return Collections.unmodifiableList(playerColours);
+
     }
 
     @Override
@@ -124,6 +127,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
+        if (colour == Colour.BLACK) {
+            if (currentRound < 3) {
+                return Optional.of(0);
+            }
+        }
         return players.stream()
                 .filter(player -> player.colour() == colour)
                 .findFirst()
