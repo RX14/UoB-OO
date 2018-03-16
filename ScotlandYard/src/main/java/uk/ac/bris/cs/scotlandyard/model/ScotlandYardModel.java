@@ -69,7 +69,6 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 )
         ).collect(Collectors.toList());
 
-
         detectiveConfigurations.forEach(detective -> {
             if (detective.tickets.get(Ticket.SECRET) != 0) {
                 throw new IllegalArgumentException("Detective " + detective + " has a secret ticket, but shouldn't");
@@ -127,19 +126,17 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public List<Colour> getPlayers() {
-
         List<Colour> playerColours = players.stream()
                 .map(player -> player.colour())
                 .collect(Collectors.toList());
-        return Collections.unmodifiableList(playerColours);
 
+        return Collections.unmodifiableList(playerColours);
     }
 
     @Override
     public Set<Colour> getWinningPlayers() {
         return Collections.emptySet();
     }
-
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
