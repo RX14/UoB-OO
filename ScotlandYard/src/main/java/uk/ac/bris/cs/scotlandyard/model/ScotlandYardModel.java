@@ -9,21 +9,19 @@ import java.util.stream.Stream;
 
 // TODO implement all methods and pass all tests
 public class ScotlandYardModel implements ScotlandYardGame {
-
     private final List<Boolean> rounds;
     private final Graph<Integer, Transport> graph;
-    private final PlayerConfiguration mrX;
-    private final List<PlayerConfiguration> detectives = new ArrayList<>();
     private final List<ScotlandYardPlayer> players;
     private final List<Spectator> spectators = new ArrayList<>();
+
     private int currentRound = 0;
-    private int currentPlayer = 0;
+    private int currentPlayerIndex = 0;
     private int mrxLastlocation = 0;
 
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
-                             PlayerConfiguration mrX,
-                             PlayerConfiguration firstDetective, PlayerConfiguration... restOfTheDetectives) {
+                             PlayerConfiguration mrXConfiguration,
+                             PlayerConfiguration firstDetectiveConfiguration, PlayerConfiguration... restOfTheDetectivesConfigurations) {
         this.rounds = Objects.requireNonNull(rounds);
         if (rounds.isEmpty()) {
             throw new IllegalArgumentException("Rounds was empty");
@@ -34,18 +32,19 @@ public class ScotlandYardModel implements ScotlandYardGame {
             throw new IllegalArgumentException("Graph was empty");
         }
 
-        this.mrX = Objects.requireNonNull(mrX);
-        if (mrX.colour != Colour.BLACK) {
+        Objects.requireNonNull(mrXConfiguration);
+        if (mrXConfiguration.colour != Colour.BLACK) {
             throw new IllegalArgumentException("MrX should be black");
         }
 
-        detectives.add(Objects.requireNonNull(firstDetective));
-        detectives.addAll(Arrays.asList(Objects.requireNonNull(restOfTheDetectives)));
+        List<PlayerConfiguration> detectiveConfigurations = new ArrayList<>();
+        detectiveConfigurations.add(Objects.requireNonNull(firstDetectiveConfiguration));
+        detectiveConfigurations.addAll(Arrays.asList(Objects.requireNonNull(restOfTheDetectivesConfigurations)));
 
-        detectives.forEach(detective -> Objects.requireNonNull(detective));
+        detectiveConfigurations.forEach(detective -> Objects.requireNonNull(detective));
 
-        List<PlayerConfiguration> playerConfigurations = new ArrayList<>(detectives);
-        playerConfigurations.add(0, mrX);
+        List<PlayerConfiguration> playerConfigurations = new ArrayList<>(detectiveConfigurations);
+        playerConfigurations.add(0, mrXConfiguration);
         if (duplicates(playerConfigurations.stream().map(player -> player.colour))) {
             throw new IllegalArgumentException("Duplicate player colour");
         }
@@ -71,7 +70,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         ).collect(Collectors.toList());
 
 
-        detectives.forEach(detective -> {
+        detectiveConfigurations.forEach(detective -> {
             if (detective.tickets.get(Ticket.SECRET) != 0) {
                 throw new IllegalArgumentException("Detective " + detective + " has a secret ticket, but shouldn't");
             }
@@ -171,7 +170,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Colour getCurrentPlayer() {
-        return this.getPlayers().get(currentPlayer);
+        return this.getPlayers().get(currentPlayerIndex);
     }
 
     @Override
