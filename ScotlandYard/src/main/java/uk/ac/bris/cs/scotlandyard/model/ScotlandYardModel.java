@@ -45,7 +45,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         detectives.forEach(detective -> Objects.requireNonNull(detective));
 
         List<PlayerConfiguration> playerConfigurations = new ArrayList<>(detectives);
-        playerConfigurations.add(0,mrX);
+        playerConfigurations.add(0, mrX);
         if (duplicates(playerConfigurations.stream().map(player -> player.colour))) {
             throw new IllegalArgumentException("Duplicate player colour");
         }
@@ -92,21 +92,23 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void registerSpectator(Spectator spectator) {
-        if (spectator == null){
+        if (spectator == null) {
             throw new NullPointerException("The spectator is null");
         }
-        spectators.forEach(existingspectator ->{
-            if (spectator == existingspectator){throw new IllegalArgumentException(""); }
+        spectators.forEach(existingspectator -> {
+            if (spectator == existingspectator) {
+                throw new IllegalArgumentException("");
+            }
         });
         spectators.add(spectator);
     }
 
     @Override
     public void unregisterSpectator(Spectator spectator) {
-        if (spectator == null){
-        throw new NullPointerException("Not sure what's happening");
-    }
-        if (spectators.isEmpty()){
+        if (spectator == null) {
+            throw new NullPointerException("Not sure what's happening");
+        }
+        if (spectators.isEmpty()) {
             throw new IllegalArgumentException("There are no spectators to remove");
         }
 
@@ -140,15 +142,13 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
 
-
-
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
-        if (getCurrentRound() == 3 || getCurrentRound() == 8 || getCurrentRound() == 12){
-                    mrxLastlocation = players.get(0).location();
+        if (getCurrentRound() == 3 || getCurrentRound() == 8 || getCurrentRound() == 12) {
+            mrxLastlocation = players.get(0).location();
         }
         if (colour == Colour.BLACK) {
-                return Optional.of(mrxLastlocation);
+            return Optional.of(mrxLastlocation);
         }
         return players.stream()
                 .filter(player -> player.colour() == colour)
