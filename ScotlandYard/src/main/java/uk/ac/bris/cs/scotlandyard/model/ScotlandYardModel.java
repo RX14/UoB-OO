@@ -16,7 +16,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private int currentRound = 0;
     private int currentPlayerIndex = 0;
-    private int mrxLastlocation = 0;
+    private int mrXLastSeenLocation = 0;
 
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
@@ -143,24 +143,19 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
-        if (getCurrentRound() == 3 || getCurrentRound() == 8 || getCurrentRound() == 12) {
-            mrxLastlocation = players.get(0).location();
+        if (isMrXPositionKnownToPlayers()) {
+            mrXLastSeenLocation = getMrX().location();
         }
         if (colour == Colour.BLACK) {
-            return Optional.of(mrxLastlocation);
+            return Optional.of(mrXLastSeenLocation);
         }
-        return players.stream()
-                .filter(player -> player.colour() == colour)
-                .findFirst()
-                .map(player -> player.location());
+
+        return getPlayer(colour).map(player -> player.location());
     }
 
     @Override
     public Optional<Integer> getPlayerTickets(Colour colour, Ticket ticket) {
-        return players.stream()
-                .filter(player -> player.colour() == colour)
-                .findFirst()
-                .map(player -> player.tickets().get(ticket));
+        return getPlayer(colour).map(player -> player.tickets().get(ticket));
     }
 
     @Override
@@ -188,4 +183,17 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return new ImmutableGraph<>(graph);
     }
 
+    private boolean isMrXPositionKnownToPlayers() {
+        return Arrays.asList(3, 8, 12).contains(currentRound);
+    }
+
+    private Optional<ScotlandYardPlayer> getPlayer(Colour colour) {
+        return players.stream()
+                .filter(player -> player.colour() == colour)
+                .findFirst();
+    }
+
+    private ScotlandYardPlayer getMrX() {
+        return getPlayer(Colour.BLACK).orElseThrow(() -> new RuntimeException("BUG: MrX no longer a player!"));
+    }
 }
