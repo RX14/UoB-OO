@@ -94,6 +94,9 @@ public class ScotlandYardModel implements ScotlandYardGame {
         if (spectator == null){
             throw new NullPointerException("The spectator is null");
         }
+        spectators.forEach(existingspectator ->{
+            if (spectator == existingspectator){throw new IllegalArgumentException(""); }
+        });
         spectators.add(spectator);
     }
 
