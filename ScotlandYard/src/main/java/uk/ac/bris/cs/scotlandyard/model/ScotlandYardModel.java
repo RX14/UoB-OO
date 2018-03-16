@@ -181,7 +181,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     private boolean isMrXPositionKnownToPlayers() {
-        return Arrays.asList(3, 8, 12).contains(currentRound);
+        return getRounds().get(currentRound);
     }
 
     private Optional<ScotlandYardPlayer> getPlayer(Colour colour) {
