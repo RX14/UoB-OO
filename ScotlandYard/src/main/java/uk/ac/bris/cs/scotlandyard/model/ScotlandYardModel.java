@@ -4,11 +4,12 @@ import uk.ac.bris.cs.gamekit.graph.Graph;
 import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // TODO implement all methods and pass all tests
-public class ScotlandYardModel implements ScotlandYardGame {
+public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move> {
     private final List<Boolean> rounds;
     private final Graph<Integer, Transport> graph;
     private final List<ScotlandYardPlayer> players;
@@ -89,6 +90,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
+    public void accept(Move move) {
+
+    }
+
+    @Override
     public void registerSpectator(Spectator spectator) {
         if (spectator == null) {
             throw new NullPointerException("The spectator is null");
@@ -115,6 +121,9 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void startRotate() {
+        Set<Move> playermoves = new HashSet<Move>();
+        playermoves.add(new PassMove(Colour.BLACK));
+        players.get(0).player().makeMove(this, players.get(0).location() , playermoves , this);
         // TODO
         throw new RuntimeException("Implement me");
     }
