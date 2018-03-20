@@ -4,12 +4,11 @@ import uk.ac.bris.cs.gamekit.graph.Graph;
 import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // TODO implement all methods and pass all tests
-public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move> {
+public class ScotlandYardModel implements ScotlandYardGame {
     private final List<Boolean> rounds;
     private final Graph<Integer, Transport> graph;
     private final List<ScotlandYardPlayer> players;
@@ -90,11 +89,6 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move> {
     }
 
     @Override
-    public void accept(Move move) {
-
-    }
-
-    @Override
     public void registerSpectator(Spectator spectator) {
         if (spectator == null) {
             throw new NullPointerException("The spectator is null");
@@ -121,11 +115,32 @@ public class ScotlandYardModel implements ScotlandYardGame, Consumer<Move> {
 
     @Override
     public void startRotate() {
-        Set<Move> playermoves = new HashSet<Move>();
-        playermoves.add(new PassMove(Colour.BLACK));
-        players.get(0).player().makeMove(this, players.get(0).location() , playermoves , this);
-        // TODO
-        throw new RuntimeException("Implement me");
+        ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
+        Set<Move> playerMoves = generateValidMoves(currentPlayer);
+        currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move -> moveMade(playerMoves, move));
+    }
+
+    private void moveMade(Set<Move> allowedMoves, Move move) {
+        Objects.requireNonNull(move);
+
+        if (!allowedMoves.contains(move)) {
+            throw new IllegalArgumentException("Player did not play a valid move");
+        }
+
+        if (move.colour() == Colour.BLACK) currentRound++;
+
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        if (currentPlayerIndex == 0) return;
+
+        ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
+        Set<Move> playerMoves = generateValidMoves(currentPlayer);
+        currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move1 -> moveMade(playerMoves, move1));
+    }
+
+    private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
+        Set<Move> playerMoves = new HashSet<>();
+        playerMoves.add(new PassMove(currentPlayer.colour()));
+        return playerMoves;
     }
 
     @Override
