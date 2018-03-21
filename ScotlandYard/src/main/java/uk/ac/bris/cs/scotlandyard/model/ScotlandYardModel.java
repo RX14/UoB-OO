@@ -143,6 +143,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         Collection<Edge<Integer,Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
         edges.forEach(edgeling ->{
 
+
         });
         if (currentPlayer.colour() != Colour.BLACK){
             playerMoves.add(new PassMove(currentPlayer.colour()));
