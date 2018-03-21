@@ -129,12 +129,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
 
         if (move instanceof TicketMove) {
+
             Ticket ticket = ((TicketMove) move).ticket();
             players.get(currentPlayerIndex).removeTicket(ticket);
             if (getCurrentPlayer() != Colour.BLACK) {
                 getMrX().addTicket(ticket);
             }
             players.get(currentPlayerIndex).location(((TicketMove) move).destination());
+            if (isMrXPositionKnownToPlayers()) {
+                mrXLastSeenLocation = getMrX().location();
+            }
         }
 
         if (move.colour() == Colour.BLACK) currentRound++;
@@ -191,9 +195,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
-        if (isMrXPositionKnownToPlayers()) {
-            mrXLastSeenLocation = getMrX().location();
-        }
+
         if (colour == Colour.BLACK) {
             return Optional.of(mrXLastSeenLocation);
         }
