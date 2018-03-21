@@ -128,6 +128,15 @@ public class ScotlandYardModel implements ScotlandYardGame {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
 
+        if (move instanceof TicketMove) {
+            Ticket ticket = ((TicketMove) move).ticket();
+            players.get(currentPlayerIndex).removeTicket(ticket);
+            if (getCurrentPlayer() != Colour.BLACK) {
+                getMrX().addTicket(ticket);
+            }
+            players.get(currentPlayerIndex).location(((TicketMove) move).destination());
+        }
+
         if (move.colour() == Colour.BLACK) currentRound++;
 
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
@@ -140,26 +149,26 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
         Set<Move> playerMoves = new HashSet<>();
-        Collection<Edge<Integer,Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
-        edges.forEach(edgeling ->{
-            if (edgeling.data() != Transport.FERRY){
-                if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))){
-                    playerMoves.add(new TicketMove(currentPlayer.colour(),  Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
+        Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
+        edges.forEach(edgeling -> {
+            if (edgeling.data() != Transport.FERRY) {
+                if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))) {
+                    playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
                 }
             }
-            if (currentPlayer.colour() == Colour.BLACK){
-                if (edgeling.data() == Transport.FERRY && currentPlayer.hasTickets(Ticket.SECRET)){
-                    playerMoves.add(new TicketMove(currentPlayer.colour(),  Ticket.SECRET, edgeling.destination().value()));
-                }
+            if (currentPlayer.hasTickets(Ticket.SECRET) && currentPlayer.colour() == Colour.BLACK) {
+                playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
             }
+
         });
         //This will need to be cleaned up and re written
-        if (currentPlayer.colour() != Colour.BLACK){
+        if (currentPlayer.colour() != Colour.BLACK) {
             playerMoves.add(new PassMove(currentPlayer.colour()));
         }
 
         return playerMoves;
     }
+
 
     @Override
     public Collection<Spectator> getSpectators() {
