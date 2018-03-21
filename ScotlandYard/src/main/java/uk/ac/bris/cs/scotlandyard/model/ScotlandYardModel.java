@@ -142,15 +142,22 @@ public class ScotlandYardModel implements ScotlandYardGame {
         Set<Move> playerMoves = new HashSet<>();
         Collection<Edge<Integer,Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
         edges.forEach(edgeling ->{
-
-
+            if (edgeling.data() != Transport.FERRY){
+                if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))){
+                    playerMoves.add(new TicketMove(currentPlayer.colour(),  Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
+                }
+            }
+            if (currentPlayer.colour() == Colour.BLACK){
+                if (edgeling.data() == Transport.FERRY && currentPlayer.hasTickets(Ticket.SECRET)){
+                    playerMoves.add(new TicketMove(currentPlayer.colour(),  Ticket.SECRET, edgeling.destination().value()));
+                }
+            }
         });
+        //This will need to be cleaned up and re written
         if (currentPlayer.colour() != Colour.BLACK){
             playerMoves.add(new PassMove(currentPlayer.colour()));
         }
-        if (currentPlayer.colour() == Colour.BLACK){
-            //Mr x moves
-        }
+
         return playerMoves;
     }
 
