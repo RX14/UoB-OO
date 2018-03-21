@@ -1,5 +1,6 @@
 package uk.ac.bris.cs.scotlandyard.model;
 
+import uk.ac.bris.cs.gamekit.graph.Edge;
 import uk.ac.bris.cs.gamekit.graph.Graph;
 import uk.ac.bris.cs.gamekit.graph.ImmutableGraph;
 
@@ -139,7 +140,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
         Set<Move> playerMoves = new HashSet<>();
-        playerMoves.add(new PassMove(currentPlayer.colour()));
+        Collection<Edge<Integer,Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
+        edges.forEach(edgeling ->{
+
+        });
+        if (currentPlayer.colour() != Colour.BLACK){
+            playerMoves.add(new PassMove(currentPlayer.colour()));
+        }
+        if (currentPlayer.colour() == Colour.BLACK){
+            //Mr x moves
+        }
         return playerMoves;
     }
 
