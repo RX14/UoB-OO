@@ -14,7 +14,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final Graph<Integer, Transport> graph;
     private final List<ScotlandYardPlayer> players;
     private final List<Spectator> spectators = new ArrayList<>();
-
+    private Set<Colour> winners = new HashSet<>();
     private int currentRound = 0;
     private int currentPlayerIndex = 0;
     private int mrXLastSeenLocation = 0;
@@ -154,6 +154,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         if (currentPlayerIndex == 0) return;
 
+
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
         Set<Move> playerMoves = generateValidMoves(currentPlayer);
         currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move1 -> moveMade(playerMoves, move1));
@@ -264,7 +265,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public boolean isGameOver() {
-        return false;
+        if (getWinningPlayers().isEmpty()) return false;
+        return true;
     }
 
     @Override
