@@ -161,31 +161,60 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
         Set<Move> playerMoves = new HashSet<>();
+        Set<TicketMove> ticketmoves = new HashSet<>();
+        Set<DoubleMove> doubles = new HashSet<>();
+
+        //This will need to be cleaned up and re written
+        ticketmoves.addAll(generateTicketMoves(currentPlayer,ticketmoves));
+        if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK) {
+            ticketmoves.forEach(move -> {
+                doubles.addAll(generateDoubleMoves(currentPlayer,move));
+            });
+
+        }
+
+
+        playerMoves.addAll(ticketmoves);
+        playerMoves.addAll(doubles);
+        //if moves still empty here mrx loses
+        if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
+            playerMoves.add(new PassMove(currentPlayer.colour()));
+        }
+        return playerMoves;
+    }
+
+    private Set<TicketMove> generateTicketMoves(ScotlandYardPlayer currentPlayer, Set<TicketMove> ticketMoves){
         Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
         edges.forEach(edgeling -> {
             if (isNodeUnoccupied(edgeling.destination().value())) {
                 if (edgeling.data() != Transport.FERRY) {
                     if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))) {
-                        playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
+                        ticketMoves.add(new TicketMove(currentPlayer.colour(), Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
                     }
                 }
                 if (currentPlayer.hasTickets(Ticket.SECRET) && currentPlayer.colour() == Colour.BLACK) {
-                    playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
+                    ticketMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
                 }
             }
-
         });
-        //double moves adding
-        //This will need to be cleaned up and re written
-
-        if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
-            playerMoves.add(new PassMove(currentPlayer.colour()));
-        }
-
-        //if moves still empty here mrx loses
-
-        return playerMoves;
+        return ticketMoves;
     }
+
+    private Set<DoubleMove> generateDoubleMoves(ScotlandYardPlayer currentPlayer, TicketMove fmove){
+            Set<DoubleMove> doubles = new HashSet<>();
+            Set<TicketMove> tmoves = new HashSet<>();
+            ScotlandYardPlayer jeff = new ScotlandYardPlayer(currentPlayer.player(),currentPlayer.colour(),
+                                                            currentPlayer.location(),currentPlayer.tickets());
+            jeff.removeTicket(fmove.ticket());
+            jeff.location(fmove.destination());
+            tmoves.addAll(generateTicketMoves(jeff, tmoves));
+            tmoves.forEach(move->{
+                doubles.add(new DoubleMove(currentPlayer.colour(),fmove,move));
+            });
+
+        return doubles;
+    }
+
 
     private boolean isNodeUnoccupied(int local){
         for (ScotlandYardPlayer persons : players) {
