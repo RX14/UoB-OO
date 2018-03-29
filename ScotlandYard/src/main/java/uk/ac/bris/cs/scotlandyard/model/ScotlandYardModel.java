@@ -160,9 +160,13 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
             }
 
+
         });
+        //checks to see if there is a player currently there
+        //double moves adding
+        //if empty passmove
         //This will need to be cleaned up and re written
-        if (currentPlayer.colour() != Colour.BLACK) {
+        if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
             playerMoves.add(new PassMove(currentPlayer.colour()));
         }
 
@@ -191,10 +195,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
-        if (isMrXPositionKnownToPlayers()) {
-            mrXLastSeenLocation = getMrX().location();
-        }
+
         if (colour == Colour.BLACK) {
+            if (isMrXPositionKnownToPlayers()) {
+                mrXLastSeenLocation = getMrX().location();
+            }
             return Optional.of(mrXLastSeenLocation);
         }
 
