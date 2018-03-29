@@ -137,6 +137,18 @@ public class ScotlandYardModel implements ScotlandYardGame {
             players.get(currentPlayerIndex).location(((TicketMove) move).destination());
         }
 
+        //Below needs to be cleaned up
+        if (move instanceof DoubleMove) {
+            Ticket move1 = ((DoubleMove) move).firstMove().ticket();
+            Ticket move2 = ((DoubleMove) move).secondMove().ticket();
+            players.get(currentPlayerIndex).removeTicket(move1);
+            players.get(currentPlayerIndex).removeTicket(move2);
+            players.get(currentPlayerIndex).removeTicket(Ticket.DOUBLE);
+            players.get(currentPlayerIndex).location(((DoubleMove) move).finalDestination());
+            currentRound++;
+            //The line above is supposed to be there
+        }
+
         if (move.colour() == Colour.BLACK) currentRound++;
 
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
@@ -151,28 +163,38 @@ public class ScotlandYardModel implements ScotlandYardGame {
         Set<Move> playerMoves = new HashSet<>();
         Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
         edges.forEach(edgeling -> {
-            if (edgeling.data() != Transport.FERRY) {
-                if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))) {
-                    playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
+            if (isNodeUnoccupied(edgeling.destination().value())) {
+                if (edgeling.data() != Transport.FERRY) {
+                    if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))) {
+                        playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
+                    }
+                }
+                if (currentPlayer.hasTickets(Ticket.SECRET) && currentPlayer.colour() == Colour.BLACK) {
+                    playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
                 }
             }
-            if (currentPlayer.hasTickets(Ticket.SECRET) && currentPlayer.colour() == Colour.BLACK) {
-                playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
-            }
-
 
         });
-        //checks to see if there is a player currently there
         //double moves adding
-        //if empty passmove
         //This will need to be cleaned up and re written
+
         if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
             playerMoves.add(new PassMove(currentPlayer.colour()));
         }
 
+        //if moves still empty here mrx loses
+
         return playerMoves;
     }
 
+    private boolean isNodeUnoccupied(int local){
+        for (ScotlandYardPlayer persons : players) {
+            if (persons.location() == local && persons.colour() != Colour.BLACK) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Override
     public Collection<Spectator> getSpectators() {
