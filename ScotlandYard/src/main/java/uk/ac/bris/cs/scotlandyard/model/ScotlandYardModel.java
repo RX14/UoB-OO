@@ -116,12 +116,13 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void startRotate() {
-        if (isGameOver()){
-            throw new IllegalStateException("The game is already over");
-        }
-        passmoves = 0;
+           passmoves = 0;
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
         Set<Move> playerMoves = generateValidMoves(currentPlayer);
+        if (players.get(currentPlayerIndex).colour() == Colour.BLACK && playerMoves.isEmpty()){
+            detectiveswin();
+            return;
+        }
         currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move -> moveMade(playerMoves, move));
     }
 
@@ -131,10 +132,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         if (!allowedMoves.contains(move)) {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
-        if (players.get(currentPlayerIndex).colour() == Colour.BLACK && allowedMoves.isEmpty()){
-            detectiveswins();
-            return;
-        }
+
         if (move instanceof TicketMove) {
             Ticket ticket = ((TicketMove) move).ticket();
             players.get(currentPlayerIndex).removeTicket(ticket);
@@ -161,11 +159,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
         if (players.get(currentPlayerIndex).location() == getMrX().location()){
-            detectiveswins();
+            detectiveswin();
             return;
         }
         if (currentPlayerIndex == 0) {
-            if (passmoves == players.size() - 1){
+            if (passmoves == players.size() - 1 || currentRound == rounds.size()){
                 mrxwins();
             }
             return;
@@ -184,7 +182,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
         //This will need to be cleaned up and re written
         ticketmoves.addAll(generateTicketMoves(currentPlayer,ticketmoves));
-        if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK) {
+        if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK && currentRound < rounds.size()) {
             ticketmoves.forEach(move -> {
                 doubles.addAll(generateDoubleMoves(currentPlayer,move));
             });
@@ -260,7 +258,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Set<Colour> getWinningPlayers() {
-        return Collections.emptySet();
+        return Collections.unmodifiableSet(winners);
     }
 
     @Override
@@ -324,7 +322,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         winners.add(Colour.BLACK);
     }
 
-    private void detectiveswins(){
+    private void detectiveswin(){
         players.forEach(player->{
             if (player.colour() != Colour.BLACK){
                 winners.add(player.colour());
