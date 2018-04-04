@@ -18,7 +18,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private int currentRound = 0;
     private int currentPlayerIndex = 0;
     private int mrXLastSeenLocation = 0;
-
+    private int passmoves = 0;
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
                              PlayerConfiguration mrXConfiguration,
@@ -116,6 +116,10 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void startRotate() {
+        if (isGameOver()){
+            throw new IllegalStateException("The game is already over");
+        }
+        passmoves = 0;
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
         Set<Move> playerMoves = generateValidMoves(currentPlayer);
         currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move -> moveMade(playerMoves, move));
@@ -127,7 +131,10 @@ public class ScotlandYardModel implements ScotlandYardGame {
         if (!allowedMoves.contains(move)) {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
-
+        if (players.get(currentPlayerIndex).colour() == Colour.BLACK && allowedMoves.isEmpty()){
+            detectiveswins();
+            return;
+        }
         if (move instanceof TicketMove) {
             Ticket ticket = ((TicketMove) move).ticket();
             players.get(currentPlayerIndex).removeTicket(ticket);
@@ -147,12 +154,22 @@ public class ScotlandYardModel implements ScotlandYardGame {
             players.get(currentPlayerIndex).location(((DoubleMove) move).finalDestination());
             currentRound++;
             //The line above is supposed to be there
+            //I think
         }
 
         if (move.colour() == Colour.BLACK) currentRound++;
 
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        if (currentPlayerIndex == 0) return;
+        if (players.get(currentPlayerIndex).location() == getMrX().location()){
+            detectiveswins();
+            return;
+        }
+        if (currentPlayerIndex == 0) {
+            if (passmoves == players.size() - 1){
+                mrxwins();
+            }
+            return;
+        }
 
 
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
@@ -180,6 +197,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         //if moves still empty here mrx loses
         if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
             playerMoves.add(new PassMove(currentPlayer.colour()));
+            passmoves ++;
         }
         return playerMoves;
     }
@@ -265,8 +283,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public boolean isGameOver() {
-        if (getWinningPlayers().isEmpty()) return false;
-        return true;
+        return !getWinningPlayers().isEmpty();
     }
 
     @Override
@@ -301,5 +318,17 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private ScotlandYardPlayer getMrX() {
         return getPlayer(Colour.BLACK).orElseThrow(() -> new RuntimeException("BUG: MrX no longer a player!"));
+    }
+
+    private void mrxwins(){
+        winners.add(Colour.BLACK);
+    }
+
+    private void detectiveswins(){
+        players.forEach(player->{
+            if (player.colour() != Colour.BLACK){
+                winners.add(player.colour());
+            }
+        });
     }
 }
