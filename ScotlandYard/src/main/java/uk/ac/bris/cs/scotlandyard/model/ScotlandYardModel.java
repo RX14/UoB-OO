@@ -116,19 +116,21 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void startRotate() {
-           passmoves = 0;
+        passmoves = 0;
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
         Set<Move> playerMoves = generateValidMoves(currentPlayer);
         if (players.get(currentPlayerIndex).colour() == Colour.BLACK && playerMoves.isEmpty()){
             detectiveswin();
-            return;
+            spectators.forEach(spectator -> spectator.onGameOver(this,winners));
         }
         currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move -> moveMade(playerMoves, move));
     }
 
     private void moveMade(Set<Move> allowedMoves, Move move) {
         Objects.requireNonNull(move);
-
+        boolean mrxwon = false;
+        boolean roundover = false;
+        boolean haswon  = false;
         if (!allowedMoves.contains(move)) {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
@@ -140,6 +142,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 getMrX().addTicket(ticket);
             }
             players.get(currentPlayerIndex).location(((TicketMove) move).destination());
+            spectators.forEach(spectator -> spectator.onMoveMade(this,move));
+        }
+
+        if (move instanceof PassMove){
+            spectators.forEach(spectator -> spectator.onMoveMade(this,move));
         }
 
         //Below needs to be cleaned up
@@ -150,26 +157,44 @@ public class ScotlandYardModel implements ScotlandYardGame {
             players.get(currentPlayerIndex).removeTicket(move2);
             players.get(currentPlayerIndex).removeTicket(Ticket.DOUBLE);
             players.get(currentPlayerIndex).location(((DoubleMove) move).finalDestination());
+            spectators.forEach(spectator -> spectator.onMoveMade(this,move));
             currentRound++;
+            spectators.forEach(spectator -> spectator.onRoundStarted(this,currentRound));
             //The line above is supposed to be there
             //I think
         }
 
-        if (move.colour() == Colour.BLACK) currentRound++;
+        if (move.colour() == Colour.BLACK){
+            currentRound++;
+            spectators.forEach(spectator -> spectator.onRoundStarted(this,currentRound));
+        }
 
+        if (players.get(currentPlayerIndex).location() == getMrX().location() && move.colour() != Colour.BLACK){
+            haswon = true;
+        }
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        if (players.get(currentPlayerIndex).location() == getMrX().location()){
-            detectiveswin();
-            return;
-        }
         if (currentPlayerIndex == 0) {
+            roundover = true;
             if (passmoves == players.size() - 1 || currentRound == rounds.size()){
-                mrxwins();
+                haswon = true;
+                mrxwon = true;
             }
-            return;
         }
 
-
+        if (haswon){
+            if (mrxwon){
+                mrxwins();
+                spectators.forEach(spectator -> spectator.onGameOver(this,winners));
+            }
+            else {
+                detectiveswin();
+                spectators.forEach(spectator -> spectator.onGameOver(this,winners));
+            }
+        }
+        if (roundover){
+            spectators.forEach(spectator -> spectator.onRotationComplete(this));
+            return;
+        }
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
         Set<Move> playerMoves = generateValidMoves(currentPlayer);
         currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move1 -> moveMade(playerMoves, move1));
@@ -182,7 +207,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
         //This will need to be cleaned up and re written
         ticketmoves.addAll(generateTicketMoves(currentPlayer,ticketmoves));
-        if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK && currentRound < rounds.size()) {
+        if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK && currentRound + 2 < rounds.size()) {
             ticketmoves.forEach(move -> {
                 doubles.addAll(generateDoubleMoves(currentPlayer,move));
             });
@@ -195,7 +220,6 @@ public class ScotlandYardModel implements ScotlandYardGame {
         //if moves still empty here mrx loses
         if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
             playerMoves.add(new PassMove(currentPlayer.colour()));
-            passmoves ++;
         }
         return playerMoves;
     }
