@@ -18,6 +18,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private int currentRound = 0;
     private int currentPlayerIndex = 0;
     private int mrXLastSeenLocation = 0;
+
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
                              PlayerConfiguration mrXConfiguration,
@@ -123,7 +124,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void startRotate() {
-        if (checkGameOver(true)){
+        if (checkGameOver(true)) {
             throw new IllegalStateException("The game is already over");
         }
         makeMove();
@@ -142,31 +143,33 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 getMrX().addTicket(ticket);
             }
             players.get(currentPlayerIndex).location(((TicketMove) move).destination());
-            spectators.forEach(spectator -> spectator.onMoveMade(this,move));
+            spectators.forEach(spectator -> spectator.onMoveMade(this, move));
         }
 
-        if (move instanceof PassMove){
-            spectators.forEach(spectator -> spectator.onMoveMade(this,move));
+        if (move instanceof PassMove) {
+            spectators.forEach(spectator -> spectator.onMoveMade(this, move));
         }
 
         //Below needs to be cleaned up
         if (move instanceof DoubleMove) {
-            Ticket move1 = ((DoubleMove) move).firstMove().ticket();
-            Ticket move2 = ((DoubleMove) move).secondMove().ticket();
+            DoubleMove doubleMove = (DoubleMove) move;
+            Ticket move1 = doubleMove.firstMove().ticket();
+            Ticket move2 = doubleMove.secondMove().ticket();
+
             players.get(currentPlayerIndex).removeTicket(move1);
             players.get(currentPlayerIndex).removeTicket(move2);
             players.get(currentPlayerIndex).removeTicket(Ticket.DOUBLE);
-            players.get(currentPlayerIndex).location(((DoubleMove) move).finalDestination());
-            spectators.forEach(spectator -> spectator.onMoveMade(this,move));
+            players.get(currentPlayerIndex).location(doubleMove.finalDestination());
+
+            spectators.forEach(spectator -> spectator.onMoveMade(this, move));
+
             currentRound++;
-            spectators.forEach(spectator -> spectator.onRoundStarted(this,currentRound));
-            //The line above is supposed to be there
-            //I think
+            spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
         }
 
-        if (move.colour() == Colour.BLACK){
+        if (move.colour() == Colour.BLACK) {
             currentRound++;
-            spectators.forEach(spectator -> spectator.onRoundStarted(this,currentRound));
+            spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
         }
 
         boolean roundOver = currentPlayerIndex == players.size() - 1;
@@ -227,7 +230,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         Set<TicketMove> ticketmoves = generateTicketMoves(currentPlayer);
         if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK && currentRound + 2 < rounds.size()) {
             ticketmoves.forEach(move -> {
-                doubles.addAll(generateDoubleMoves(currentPlayer,move));
+                doubles.addAll(generateDoubleMoves(currentPlayer, move));
             });
 
         }
@@ -241,7 +244,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return playerMoves;
     }
 
-    private Set<TicketMove> generateTicketMoves(ScotlandYardPlayer currentPlayer){
+    private Set<TicketMove> generateTicketMoves(ScotlandYardPlayer currentPlayer) {
         Set<TicketMove> ticketMoves = new HashSet<>();
         Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
         edges.forEach(edgeling -> {
@@ -259,9 +262,9 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return ticketMoves;
     }
 
-    private Set<DoubleMove> generateDoubleMoves(ScotlandYardPlayer currentPlayer, TicketMove fmove){
-        ScotlandYardPlayer jeff = new ScotlandYardPlayer(currentPlayer.player(),currentPlayer.colour(),
-                currentPlayer.location(),currentPlayer.tickets());
+    private Set<DoubleMove> generateDoubleMoves(ScotlandYardPlayer currentPlayer, TicketMove fmove) {
+        ScotlandYardPlayer jeff = new ScotlandYardPlayer(currentPlayer.player(), currentPlayer.colour(),
+                currentPlayer.location(), currentPlayer.tickets());
         jeff.removeTicket(fmove.ticket());
         jeff.location(fmove.destination());
 
@@ -271,7 +274,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
 
-    private boolean isNodeUnoccupied(int local){
+    private boolean isNodeUnoccupied(int local) {
         for (ScotlandYardPlayer persons : players) {
             if (persons.location() == local && persons.colour() != Colour.BLACK) {
                 return false;
