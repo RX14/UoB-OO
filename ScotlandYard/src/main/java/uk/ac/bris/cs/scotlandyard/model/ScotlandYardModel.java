@@ -202,18 +202,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
         Set<Move> playerMoves = new HashSet<>();
-        Set<TicketMove> ticketmoves = new HashSet<>();
         Set<DoubleMove> doubles = new HashSet<>();
 
         //This will need to be cleaned up and re written
-        ticketmoves.addAll(generateTicketMoves(currentPlayer,ticketmoves));
+        Set<TicketMove> ticketmoves = generateTicketMoves(currentPlayer);
         if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK && currentRound + 2 < rounds.size()) {
             ticketmoves.forEach(move -> {
                 doubles.addAll(generateDoubleMoves(currentPlayer,move));
             });
 
         }
-
 
         playerMoves.addAll(ticketmoves);
         playerMoves.addAll(doubles);
@@ -224,7 +222,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return playerMoves;
     }
 
-    private Set<TicketMove> generateTicketMoves(ScotlandYardPlayer currentPlayer, Set<TicketMove> ticketMoves){
+    private Set<TicketMove> generateTicketMoves(ScotlandYardPlayer currentPlayer){
+        Set<TicketMove> ticketMoves = new HashSet<>();
         Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
         edges.forEach(edgeling -> {
             if (isNodeUnoccupied(edgeling.destination().value())) {
@@ -242,18 +241,14 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     private Set<DoubleMove> generateDoubleMoves(ScotlandYardPlayer currentPlayer, TicketMove fmove){
-            Set<DoubleMove> doubles = new HashSet<>();
-            Set<TicketMove> tmoves = new HashSet<>();
-            ScotlandYardPlayer jeff = new ScotlandYardPlayer(currentPlayer.player(),currentPlayer.colour(),
-                                                            currentPlayer.location(),currentPlayer.tickets());
-            jeff.removeTicket(fmove.ticket());
-            jeff.location(fmove.destination());
-            tmoves.addAll(generateTicketMoves(jeff, tmoves));
-            tmoves.forEach(move->{
-                doubles.add(new DoubleMove(currentPlayer.colour(),fmove,move));
-            });
+        ScotlandYardPlayer jeff = new ScotlandYardPlayer(currentPlayer.player(),currentPlayer.colour(),
+                currentPlayer.location(),currentPlayer.tickets());
+        jeff.removeTicket(fmove.ticket());
+        jeff.location(fmove.destination());
 
-        return doubles;
+        return generateTicketMoves(jeff).stream()
+                .map(move -> new DoubleMove(currentPlayer.colour(), fmove, move))
+                .collect(Collectors.toSet());
     }
 
 
