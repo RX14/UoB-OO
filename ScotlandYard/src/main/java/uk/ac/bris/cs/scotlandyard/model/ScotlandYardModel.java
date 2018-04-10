@@ -18,7 +18,6 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private int currentRound = 0;
     private int currentPlayerIndex = 0;
     private int mrXLastSeenLocation = 0;
-    private int passmoves = 0;
     public ScotlandYardModel(List<Boolean> rounds,
                              Graph<Integer, Transport> graph,
                              PlayerConfiguration mrXConfiguration,
@@ -114,23 +113,19 @@ public class ScotlandYardModel implements ScotlandYardGame {
         spectators.remove(spectator);
     }
 
-    @Override
-    public void startRotate() {
-        passmoves = 0;
+    private void makeMove() {
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
         Set<Move> playerMoves = generateValidMoves(currentPlayer);
-        if (players.get(currentPlayerIndex).colour() == Colour.BLACK && playerMoves.isEmpty()){
-            detectiveswin();
-            spectators.forEach(spectator -> spectator.onGameOver(this,winners));
-        }
         currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move -> moveMade(playerMoves, move));
+    }
+
+    @Override
+    public void startRotate() {
+        makeMove();
     }
 
     private void moveMade(Set<Move> allowedMoves, Move move) {
         Objects.requireNonNull(move);
-        boolean mrxwon = false;
-        boolean roundover = false;
-        boolean haswon  = false;
         if (!allowedMoves.contains(move)) {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
@@ -169,35 +164,48 @@ public class ScotlandYardModel implements ScotlandYardGame {
             spectators.forEach(spectator -> spectator.onRoundStarted(this,currentRound));
         }
 
+        boolean mrXWon = false;
+        boolean detectivesWon = false;
+
         if (players.get(currentPlayerIndex).location() == getMrX().location() && move.colour() != Colour.BLACK){
-            haswon = true;
-        }
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        if (currentPlayerIndex == 0) {
-            roundover = true;
-            if (passmoves == players.size() - 1 || currentRound == rounds.size()){
-                haswon = true;
-                mrxwon = true;
-            }
+            detectivesWon = true;
         }
 
-        if (haswon){
-            if (mrxwon){
-                mrxwins();
-                spectators.forEach(spectator -> spectator.onGameOver(this,winners));
-            }
-            else {
-                detectiveswin();
-                spectators.forEach(spectator -> spectator.onGameOver(this,winners));
-            }
+        boolean roundOver = currentPlayerIndex == players.size() - 1;
+        if (roundOver){
+            mrXWon = currentRound == rounds.size() ||
+                    players.stream()
+                            .filter(player -> !player.isMrX())
+                            .map(this::generateValidMoves)
+                            .allMatch(set -> set.stream().allMatch(playerMove -> playerMove instanceof PassMove));
+
+            detectivesWon = detectivesWon || generateValidMoves(getMrX()).isEmpty();
         }
-        if (roundover){
-            spectators.forEach(spectator -> spectator.onRotationComplete(this));
+
+        if (mrXWon) {
+            winners.add(Colour.BLACK);
+        }
+
+        if (detectivesWon) {
+            players.forEach(player -> {
+                if (player.colour() != Colour.BLACK) {
+                    winners.add(player.colour());
+                }
+            });
+        }
+
+        if (mrXWon || detectivesWon) {
+            spectators.forEach(spectator -> spectator.onGameOver(this,winners));
             return;
         }
-        ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
-        Set<Move> playerMoves = generateValidMoves(currentPlayer);
-        currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move1 -> moveMade(playerMoves, move1));
+
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+
+        if (roundOver) {
+            spectators.forEach(spectator -> spectator.onRotationComplete(this));
+        } else {
+            makeMove();
+        }
     }
 
     private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
@@ -337,15 +345,4 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return getPlayer(Colour.BLACK).orElseThrow(() -> new RuntimeException("BUG: MrX no longer a player!"));
     }
 
-    private void mrxwins(){
-        winners.add(Colour.BLACK);
-    }
-
-    private void detectiveswin(){
-        players.forEach(player->{
-            if (player.colour() != Colour.BLACK){
-                winners.add(player.colour());
-            }
-        });
-    }
 }
