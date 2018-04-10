@@ -172,14 +172,12 @@ public class ScotlandYardModel implements ScotlandYardGame {
         if (move instanceof DoubleMove) {
             DoubleMove doubleMove = (DoubleMove) move;
 
-            final DoubleMove hiddenMove;
-            if (isMrXPositionKnownToPlayers()) {
-                hiddenMove = doubleMove;
-            } else {
-                hiddenMove = new DoubleMove(move.colour(),
-                        doubleMove.firstMove().ticket(), 0,
-                        doubleMove.secondMove().ticket(), 0);
-            }
+            int firstMoveLocation = isMrXPositionKnownToPlayers(currentRound) ? doubleMove.firstMove().destination() : mrXLastSeenLocation;
+            int secondMoveLocation = isMrXPositionKnownToPlayers(currentRound + 1) ? doubleMove.secondMove().destination() : firstMoveLocation;
+
+            final DoubleMove hiddenMove = new DoubleMove(move.colour(),
+                    doubleMove.firstMove().ticket(), firstMoveLocation,
+                    doubleMove.secondMove().ticket(), secondMoveLocation);
 
             movePlayer.removeTicket(Ticket.DOUBLE);
             spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove));
@@ -371,12 +369,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return new ImmutableGraph<>(graph);
     }
 
-    private boolean isMrXPositionKnownToPlayers() {
-        if (currentRound >= getRounds().size()) {
+    private boolean isMrXPositionKnownToPlayers(int round) {
+        if (round >= getRounds().size()) {
             return false;
         } else {
-            return getRounds().get(currentRound);
+            return getRounds().get(round);
         }
+    }
+
+    private boolean isMrXPositionKnownToPlayers() {
+        return isMrXPositionKnownToPlayers(currentRound);
     }
 
     private Optional<ScotlandYardPlayer> getPlayer(Colour colour) {
