@@ -123,6 +123,9 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void startRotate() {
+        if (checkGameOver(true)){
+            throw new IllegalStateException("The game is already over");
+        }
         makeMove();
     }
 
