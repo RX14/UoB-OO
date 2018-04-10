@@ -375,7 +375,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private boolean isMrXPositionKnownToPlayers() {
         if (currentRound >= getRounds().size()) {
-            return true;
+            return false;
         } else {
             return getRounds().get(currentRound);
         }
