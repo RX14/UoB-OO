@@ -340,7 +340,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     private boolean isMrXPositionKnownToPlayers() {
-        return getRounds().get(currentRound);
+        if (currentRound >= getRounds().size()) {
+            return true;
+        } else {
+            return getRounds().get(currentRound);
+        }
     }
 
     private Optional<ScotlandYardPlayer> getPlayer(Colour colour) {
