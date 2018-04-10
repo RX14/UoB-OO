@@ -79,7 +79,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
             }
         });
 
-        checkGameOver(true);
+        checkGameOver(true, getMrX());
     }
 
     private <T> boolean duplicates(Stream<T> stream) {
@@ -124,7 +124,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void startRotate() {
-        if (checkGameOver(true)) {
+        if (isGameOver()) {
             throw new IllegalStateException("The game is already over");
         }
         makeMove();
@@ -136,35 +136,63 @@ public class ScotlandYardModel implements ScotlandYardGame {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
 
+        ScotlandYardPlayer movePlayer = players.stream()
+                .filter(player -> player.colour() == move.colour())
+                .findFirst().orElseThrow(() -> new IllegalStateException("BUG: Move made for non-existent player"));
+
+        boolean roundOver = currentPlayerIndex == players.size() - 1;
+
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+
+        Move visibleMove = null;
+
         if (move instanceof TicketMove) {
             Ticket ticket = ((TicketMove) move).ticket();
-            players.get(currentPlayerIndex).removeTicket(ticket);
-            if (getCurrentPlayer() != Colour.BLACK) {
+
+            movePlayer.removeTicket(ticket);
+            if (move.colour() != Colour.BLACK) {
                 getMrX().addTicket(ticket);
             }
-            players.get(currentPlayerIndex).location(((TicketMove) move).destination());
-            spectators.forEach(spectator -> spectator.onMoveMade(this, move));
+
+            movePlayer.location(((TicketMove) move).destination());
+
+            if (move.colour() == Colour.BLACK && !isMrXPositionKnownToPlayers()) {
+                visibleMove = new TicketMove(move.colour(), ticket, 0);
+            } else {
+                visibleMove = move;
+            }
         }
 
         if (move instanceof PassMove) {
-            spectators.forEach(spectator -> spectator.onMoveMade(this, move));
+            visibleMove = move;
         }
 
         //Below needs to be cleaned up
         if (move instanceof DoubleMove) {
             DoubleMove doubleMove = (DoubleMove) move;
-            Ticket move1 = doubleMove.firstMove().ticket();
-            Ticket move2 = doubleMove.secondMove().ticket();
 
-            players.get(currentPlayerIndex).removeTicket(move1);
-            players.get(currentPlayerIndex).removeTicket(move2);
-            players.get(currentPlayerIndex).removeTicket(Ticket.DOUBLE);
-            players.get(currentPlayerIndex).location(doubleMove.finalDestination());
+            final DoubleMove hiddenMove;
+            if (isMrXPositionKnownToPlayers()) {
+                hiddenMove = doubleMove;
+            } else {
+                hiddenMove = new DoubleMove(move.colour(),
+                        doubleMove.firstMove().ticket(), 0,
+                        doubleMove.secondMove().ticket(), 0);
+            }
 
-            spectators.forEach(spectator -> spectator.onMoveMade(this, move));
+            movePlayer.removeTicket(Ticket.DOUBLE);
+            spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove));
 
             currentRound++;
             spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
+
+            movePlayer.removeTicket(doubleMove.firstMove().ticket());
+            movePlayer.location(doubleMove.firstMove().destination());
+            spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove.firstMove()));
+
+            movePlayer.removeTicket(doubleMove.secondMove().ticket());
+            movePlayer.location(doubleMove.secondMove().destination());
+            visibleMove = hiddenMove.secondMove();
         }
 
         if (move.colour() == Colour.BLACK) {
@@ -172,10 +200,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
             spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
         }
 
-        boolean roundOver = currentPlayerIndex == players.size() - 1;
-        if (checkGameOver(roundOver)) return;
+        Objects.requireNonNull(visibleMove, "BUG: Visible move was not initialized");
+        final Move javaIsTheBigGay = visibleMove;
+        spectators.forEach(spectator -> spectator.onMoveMade(this, javaIsTheBigGay));
 
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+        if (checkGameOver(roundOver, movePlayer)) return;
 
         if (roundOver) {
             spectators.forEach(spectator -> spectator.onRotationComplete(this));
@@ -184,18 +213,18 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
     }
 
-    private boolean checkGameOver(boolean roundOver) {
+    private boolean checkGameOver(boolean roundOver, ScotlandYardPlayer player) {
         boolean mrXWon = false;
         boolean detectivesWon = false;
 
-        if (players.get(currentPlayerIndex).location() == getMrX().location() && getCurrentPlayer() != Colour.BLACK) {
+        if (player.colour() != Colour.BLACK && player.location() == getMrX().location()) {
             detectivesWon = true;
         }
 
         if (roundOver) {
             mrXWon = currentRound == rounds.size() ||
                     players.stream()
-                            .filter(player -> !player.isMrX())
+                            .filter(player1 -> !player1.isMrX())
                             .map(this::generateValidMoves)
                             .allMatch(set -> set.stream().allMatch(playerMove -> playerMove instanceof PassMove));
 
@@ -207,9 +236,9 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
 
         if (detectivesWon) {
-            players.forEach(player -> {
-                if (player.colour() != Colour.BLACK) {
-                    winners.add(player.colour());
+            players.forEach(player1 -> {
+                if (player1.colour() != Colour.BLACK) {
+                    winners.add(player1.colour());
                 }
             });
         }
@@ -304,7 +333,6 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
-
         if (colour == Colour.BLACK) {
             if (isMrXPositionKnownToPlayers()) {
                 mrXLastSeenLocation = getMrX().location();
