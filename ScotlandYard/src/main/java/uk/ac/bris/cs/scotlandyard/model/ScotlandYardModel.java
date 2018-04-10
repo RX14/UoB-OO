@@ -127,6 +127,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         if (isGameOver()) {
             throw new IllegalStateException("The game is already over");
         }
+
         makeMove();
     }
 
@@ -154,7 +155,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 getMrX().addTicket(ticket);
             }
 
-            movePlayer.location(((TicketMove) move).destination());
+            movePlayer(movePlayer, ((TicketMove) move).destination());
 
             if (move.colour() == Colour.BLACK && !isMrXPositionKnownToPlayers()) {
                 visibleMove = new TicketMove(move.colour(), ticket, 0);
@@ -187,11 +188,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
             spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
 
             movePlayer.removeTicket(doubleMove.firstMove().ticket());
-            movePlayer.location(doubleMove.firstMove().destination());
+            movePlayer(movePlayer, doubleMove.firstMove().destination());
             spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove.firstMove()));
 
             movePlayer.removeTicket(doubleMove.secondMove().ticket());
-            movePlayer.location(doubleMove.secondMove().destination());
+            movePlayer(movePlayer, doubleMove.secondMove().destination());
             visibleMove = hiddenMove.secondMove();
         }
 
@@ -334,13 +335,10 @@ public class ScotlandYardModel implements ScotlandYardGame {
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
         if (colour == Colour.BLACK) {
-            if (isMrXPositionKnownToPlayers()) {
-                mrXLastSeenLocation = getMrX().location();
-            }
             return Optional.of(mrXLastSeenLocation);
+        } else {
+            return getPlayer(colour).map(player -> player.location());
         }
-
-        return getPlayer(colour).map(player -> player.location());
     }
 
     @Override
@@ -391,4 +389,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return getPlayer(Colour.BLACK).orElseThrow(() -> new RuntimeException("BUG: MrX no longer a player!"));
     }
 
+    private void movePlayer(ScotlandYardPlayer player, int destination) {
+        player.location(destination);
+
+        if (player.colour() == Colour.BLACK && isMrXPositionKnownToPlayers()) {
+            mrXLastSeenLocation = destination;
+        }
+    }
 }
