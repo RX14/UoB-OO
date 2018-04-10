@@ -158,7 +158,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
             movePlayer(movePlayer, ((TicketMove) move).destination());
 
             if (move.colour() == Colour.BLACK && !isMrXPositionKnownToPlayers()) {
-                visibleMove = new TicketMove(move.colour(), ticket, 0);
+                visibleMove = new TicketMove(move.colour(), ticket, mrXLastSeenLocation);
             } else {
                 visibleMove = move;
             }
