@@ -182,11 +182,11 @@ public class ScotlandYardModel implements ScotlandYardGame {
             movePlayer.removeTicket(Ticket.DOUBLE);
             spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove));
 
-            currentRound++;
-            spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
-
             movePlayer.removeTicket(doubleMove.firstMove().ticket());
             movePlayer(movePlayer, doubleMove.firstMove().destination());
+
+            currentRound++;
+            spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
             spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove.firstMove()));
 
             movePlayer.removeTicket(doubleMove.secondMove().ticket());
@@ -199,11 +199,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
             spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
         }
 
+        checkGameOver(roundOver, movePlayer);
+
         Objects.requireNonNull(visibleMove, "BUG: Visible move was not initialized");
         final Move javaIsTheBigGay = visibleMove;
         spectators.forEach(spectator -> spectator.onMoveMade(this, javaIsTheBigGay));
 
-        if (checkGameOver(roundOver, movePlayer)) return;
+        if (isGameOver()) {
+            spectators.forEach(spectator -> spectator.onGameOver(this, winners));
+            return;
+        }
 
         if (roundOver) {
             spectators.forEach(spectator -> spectator.onRotationComplete(this));
@@ -212,7 +217,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
     }
 
-    private boolean checkGameOver(boolean roundOver, ScotlandYardPlayer player) {
+    private void checkGameOver(boolean roundOver, ScotlandYardPlayer player) {
         boolean mrXWon = false;
         boolean detectivesWon = false;
 
@@ -240,13 +245,6 @@ public class ScotlandYardModel implements ScotlandYardGame {
                     winners.add(player1.colour());
                 }
             });
-        }
-
-        if (mrXWon || detectivesWon) {
-            spectators.forEach(spectator -> spectator.onGameOver(this, winners));
-            return true;
-        } else {
-            return false;
         }
     }
 
