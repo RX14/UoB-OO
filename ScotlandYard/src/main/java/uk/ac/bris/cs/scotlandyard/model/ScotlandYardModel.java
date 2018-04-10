@@ -77,6 +77,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 throw new IllegalArgumentException("Detective " + detective + " has a double ticket, but shouldn't");
             }
         });
+
+        checkGameOver(true);
     }
 
     private <T> boolean duplicates(Stream<T> stream) {
@@ -164,15 +166,27 @@ public class ScotlandYardModel implements ScotlandYardGame {
             spectators.forEach(spectator -> spectator.onRoundStarted(this,currentRound));
         }
 
+        boolean roundOver = currentPlayerIndex == players.size() - 1;
+        if (checkGameOver(roundOver)) return;
+
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+
+        if (roundOver) {
+            spectators.forEach(spectator -> spectator.onRotationComplete(this));
+        } else {
+            makeMove();
+        }
+    }
+
+    private boolean checkGameOver(boolean roundOver) {
         boolean mrXWon = false;
         boolean detectivesWon = false;
 
-        if (players.get(currentPlayerIndex).location() == getMrX().location() && move.colour() != Colour.BLACK){
+        if (players.get(currentPlayerIndex).location() == getMrX().location() && getCurrentPlayer() != Colour.BLACK) {
             detectivesWon = true;
         }
 
-        boolean roundOver = currentPlayerIndex == players.size() - 1;
-        if (roundOver){
+        if (roundOver) {
             mrXWon = currentRound == rounds.size() ||
                     players.stream()
                             .filter(player -> !player.isMrX())
@@ -195,16 +209,10 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
 
         if (mrXWon || detectivesWon) {
-            spectators.forEach(spectator -> spectator.onGameOver(this,winners));
-            return;
-        }
-
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-
-        if (roundOver) {
-            spectators.forEach(spectator -> spectator.onRotationComplete(this));
+            spectators.forEach(spectator -> spectator.onGameOver(this, winners));
+            return true;
         } else {
-            makeMove();
+            return false;
         }
     }
 
