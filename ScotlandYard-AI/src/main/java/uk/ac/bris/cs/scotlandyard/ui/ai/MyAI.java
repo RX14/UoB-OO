@@ -13,19 +13,24 @@ import uk.ac.bris.cs.scotlandyard.model.Player;
 import uk.ac.bris.cs.scotlandyard.model.ScotlandYardView;
 
 // TODO name the AI
-@ManagedAI("Name me!")
+@ManagedAI("Jeff")
 public class MyAI implements PlayerFactory {
 
 	// TODO create a new player here
 	@Override
 	public Player createPlayer(Colour colour) {
-		return new MyPlayer();
+		return new MyPlayer(colour);
 	}
 
 	// TODO A sample player that selects a random move
 	private static class MyPlayer implements Player {
-
+		private final Colour colour;
 		private final Random random = new Random();
+
+		public MyPlayer(Colour colour) {
+			this.colour = colour;
+			if (colour != Colour.BLACK) throw new IllegalArgumentException("The AI is for MrX only");
+		}
 
 		@Override
 		public void makeMove(ScotlandYardView view, int location, Set<Move> moves,
