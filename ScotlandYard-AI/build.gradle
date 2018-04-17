@@ -1,0 +1,40 @@
+apply plugin: 'java'
+
+group = 'uk.ac.bris.cs'
+version = '0.0.1-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+repositories {
+    maven { url "https://jcenter.bintray.com/" }
+    maven { url "file:${project.projectDir}/repo" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+}
+
+dependencies {
+    compile group: 'uk.ac.bris.cs', name: 'scotlandyard-local', version:'0.0.1-SNAPSHOT'
+    compile group: 'uk.ac.bris.cs', name: 'scotlandyard-api', version:'0.0.1-SNAPSHOT'
+    compile group: 'uk.ac.bris.cs', name: 'scotlandyard-websocket-api', version:'0.0.1-SNAPSHOT'
+    compile group: 'uk.ac.bris.cs', name: 'gamekit', version:'0.0.1-SNAPSHOT'
+    compile group: 'uk.ac.bris.cs', name: 'fxkit', version:'0.0.1-SNAPSHOT'
+    compile group: 'uk.ac.bris.cs', name: 'wskit', version:'0.0.1-SNAPSHOT'
+    compile group: 'io.atlassian.fugue', name: 'fugue', version:'4.5.1'
+    compile group: 'net.kurobako.gesturefx', name: 'gesturefx', version:'0.2.0'
+    compile group: 'com.google.guava', name: 'guava', version:'23.6-jre'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.5'
+    compile group: 'org.fxmisc.easybind', name: 'easybind', version:'1.0.3'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version:'1.2.3'
+    compile group: 'com.atlassian.commonmark', name: 'commonmark', version:'0.6.0'
+    compile group: 'io.github.lukehutch', name: 'fast-classpath-scanner', version:'2.9.4'
+    testCompile group: 'junit', name: 'junit', version:'4.12'
+    testCompile group: 'org.mockito', name: 'mockito-core', version:'2.2.11'
+    testCompile group: 'org.hamcrest', name: 'hamcrest-library', version:'1.3'
+    testCompile group: 'org.assertj', name: 'assertj-core', version:'3.9.0'
+    testCompile group: 'nl.jqno.equalsverifier', name: 'equalsverifier', version:'2.4.1'
+    testCompile group: 'org.testfx', name: 'testfx-junit', version:'4.0.4-alpha'
+}
