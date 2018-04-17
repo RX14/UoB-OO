@@ -14,7 +14,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     private final Graph<Integer, Transport> graph;
     private final List<ScotlandYardPlayer> players;
     private final List<Spectator> spectators = new ArrayList<>();
-
+    private Set<Colour> winners = new HashSet<>();
     private int currentRound = 0;
     private int currentPlayerIndex = 0;
     private int mrXLastSeenLocation = 0;
@@ -78,6 +78,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 throw new IllegalArgumentException("Detective " + detective + " has a double ticket, but shouldn't");
             }
         });
+
+        checkGameOver(true, getMrX());
     }
 
     private <T> boolean duplicates(Stream<T> stream) {
@@ -114,65 +116,198 @@ public class ScotlandYardModel implements ScotlandYardGame {
         spectators.remove(spectator);
     }
 
-    @Override
-    public void startRotate() {
+    private void makeMove() {
         ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
         Set<Move> playerMoves = generateValidMoves(currentPlayer);
         currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move -> moveMade(playerMoves, move));
     }
 
+    @Override
+    public void startRotate() {
+        if (isGameOver()) {
+            throw new IllegalStateException("The game is already over");
+        }
+
+        makeMove();
+    }
+
     private void moveMade(Set<Move> allowedMoves, Move move) {
         Objects.requireNonNull(move);
-
         if (!allowedMoves.contains(move)) {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
 
-        if (move instanceof TicketMove) {
+        ScotlandYardPlayer movePlayer = players.stream()
+                .filter(player -> player.colour() == move.colour())
+                .findFirst().orElseThrow(() -> new IllegalStateException("BUG: Move made for non-existent player"));
 
+        boolean roundOver = currentPlayerIndex == players.size() - 1;
+
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+
+        Move visibleMove = null;
+
+        if (move instanceof TicketMove) {
             Ticket ticket = ((TicketMove) move).ticket();
-            players.get(currentPlayerIndex).removeTicket(ticket);
-            if (getCurrentPlayer() != Colour.BLACK) {
+
+            movePlayer.removeTicket(ticket);
+            if (move.colour() != Colour.BLACK) {
                 getMrX().addTicket(ticket);
             }
-            players.get(currentPlayerIndex).location(((TicketMove) move).destination());
-            if (isMrXPositionKnownToPlayers()) {
-                mrXLastSeenLocation = getMrX().location();
+
+            movePlayer(movePlayer, ((TicketMove) move).destination());
+
+            if (move.colour() == Colour.BLACK && !isMrXPositionKnownToPlayers()) {
+                visibleMove = new TicketMove(move.colour(), ticket, mrXLastSeenLocation);
+            } else {
+                visibleMove = move;
             }
         }
 
-        if (move.colour() == Colour.BLACK) currentRound++;
+        if (move instanceof PassMove) {
+            visibleMove = move;
+        }
 
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        if (currentPlayerIndex == 0) return;
+        //Below needs to be cleaned up
+        if (move instanceof DoubleMove) {
+            DoubleMove doubleMove = (DoubleMove) move;
 
-        ScotlandYardPlayer currentPlayer = players.get(currentPlayerIndex);
-        Set<Move> playerMoves = generateValidMoves(currentPlayer);
-        currentPlayer.player().makeMove(this, currentPlayer.location(), playerMoves, move1 -> moveMade(playerMoves, move1));
+            int firstMoveLocation = isMrXPositionKnownToPlayers(currentRound) ? doubleMove.firstMove().destination() : mrXLastSeenLocation;
+            int secondMoveLocation = isMrXPositionKnownToPlayers(currentRound + 1) ? doubleMove.secondMove().destination() : firstMoveLocation;
+
+            final DoubleMove hiddenMove = new DoubleMove(move.colour(),
+                    doubleMove.firstMove().ticket(), firstMoveLocation,
+                    doubleMove.secondMove().ticket(), secondMoveLocation);
+
+            movePlayer.removeTicket(Ticket.DOUBLE);
+            spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove));
+
+            movePlayer.removeTicket(doubleMove.firstMove().ticket());
+            movePlayer(movePlayer, doubleMove.firstMove().destination());
+
+            currentRound++;
+            spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
+            spectators.forEach(spectator -> spectator.onMoveMade(this, hiddenMove.firstMove()));
+
+            movePlayer.removeTicket(doubleMove.secondMove().ticket());
+            movePlayer(movePlayer, doubleMove.secondMove().destination());
+            visibleMove = hiddenMove.secondMove();
+        }
+
+        if (move.colour() == Colour.BLACK) {
+            currentRound++;
+            spectators.forEach(spectator -> spectator.onRoundStarted(this, currentRound));
+        }
+
+        checkGameOver(roundOver, movePlayer);
+
+        Objects.requireNonNull(visibleMove, "BUG: Visible move was not initialized");
+        final Move javaIsTheBigGay = visibleMove;
+        spectators.forEach(spectator -> spectator.onMoveMade(this, javaIsTheBigGay));
+
+        if (isGameOver()) {
+            spectators.forEach(spectator -> spectator.onGameOver(this, winners));
+            return;
+        }
+
+        if (roundOver) {
+            spectators.forEach(spectator -> spectator.onRotationComplete(this));
+        } else {
+            makeMove();
+        }
+    }
+
+    private void checkGameOver(boolean roundOver, ScotlandYardPlayer player) {
+        boolean mrXWon = false;
+        boolean detectivesWon = false;
+
+        if (player.colour() != Colour.BLACK && player.location() == getMrX().location()) {
+            detectivesWon = true;
+        }
+
+        if (roundOver) {
+            mrXWon = currentRound == rounds.size() ||
+                    players.stream()
+                            .filter(player1 -> !player1.isMrX())
+                            .map(this::generateValidMoves)
+                            .allMatch(set -> set.stream().allMatch(playerMove -> playerMove instanceof PassMove));
+
+            detectivesWon = detectivesWon || generateValidMoves(getMrX()).isEmpty();
+        }
+
+        if (mrXWon) {
+            winners.add(Colour.BLACK);
+        }
+
+        if (detectivesWon) {
+            players.forEach(player1 -> {
+                if (player1.colour() != Colour.BLACK) {
+                    winners.add(player1.colour());
+                }
+            });
+        }
     }
 
     private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
         Set<Move> playerMoves = new HashSet<>();
-        Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
-        edges.forEach(edgeling -> {
-            if (edgeling.data() != Transport.FERRY) {
-                if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))) {
-                    playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
-                }
-            }
-            if (currentPlayer.hasTickets(Ticket.SECRET) && currentPlayer.colour() == Colour.BLACK) {
-                playerMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
-            }
+        Set<DoubleMove> doubles = new HashSet<>();
 
-        });
         //This will need to be cleaned up and re written
-        if (currentPlayer.colour() != Colour.BLACK) {
-            playerMoves.add(new PassMove(currentPlayer.colour()));
+        Set<TicketMove> ticketmoves = generateTicketMoves(currentPlayer);
+        if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK && currentRound + 2 < rounds.size()) {
+            ticketmoves.forEach(move -> {
+                doubles.addAll(generateDoubleMoves(currentPlayer, move));
+            });
+
         }
 
+        playerMoves.addAll(ticketmoves);
+        playerMoves.addAll(doubles);
+        //if moves still empty here mrx loses
+        if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
+            playerMoves.add(new PassMove(currentPlayer.colour()));
+        }
         return playerMoves;
     }
 
+    private Set<TicketMove> generateTicketMoves(ScotlandYardPlayer currentPlayer) {
+        Set<TicketMove> ticketMoves = new HashSet<>();
+        Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
+        edges.forEach(edgeling -> {
+            if (isNodeUnoccupied(edgeling.destination().value())) {
+                if (edgeling.data() != Transport.FERRY) {
+                    if (currentPlayer.hasTickets(Ticket.fromTransport(edgeling.data()))) {
+                        ticketMoves.add(new TicketMove(currentPlayer.colour(), Ticket.fromTransport(edgeling.data()), edgeling.destination().value()));
+                    }
+                }
+                if (currentPlayer.hasTickets(Ticket.SECRET) && currentPlayer.colour() == Colour.BLACK) {
+                    ticketMoves.add(new TicketMove(currentPlayer.colour(), Ticket.SECRET, edgeling.destination().value()));
+                }
+            }
+        });
+        return ticketMoves;
+    }
+
+    private Set<DoubleMove> generateDoubleMoves(ScotlandYardPlayer currentPlayer, TicketMove fmove) {
+        ScotlandYardPlayer jeff = new ScotlandYardPlayer(currentPlayer.player(), currentPlayer.colour(),
+                currentPlayer.location(), currentPlayer.tickets());
+        jeff.removeTicket(fmove.ticket());
+        jeff.location(fmove.destination());
+
+        return generateTicketMoves(jeff).stream()
+                .map(move -> new DoubleMove(currentPlayer.colour(), fmove, move))
+                .collect(Collectors.toSet());
+    }
+
+
+    private boolean isNodeUnoccupied(int local) {
+        for (ScotlandYardPlayer persons : players) {
+            if (persons.location() == local && persons.colour() != Colour.BLACK) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Override
     public Collection<Spectator> getSpectators() {
@@ -190,17 +325,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public Set<Colour> getWinningPlayers() {
-        return Collections.emptySet();
+        return Collections.unmodifiableSet(winners);
     }
 
     @Override
     public Optional<Integer> getPlayerLocation(Colour colour) {
-
         if (colour == Colour.BLACK) {
             return Optional.of(mrXLastSeenLocation);
+        } else {
+            return getPlayer(colour).map(player -> player.location());
         }
-
-        return getPlayer(colour).map(player -> player.location());
     }
 
     @Override
@@ -210,7 +344,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public boolean isGameOver() {
-        return false;
+        return !getWinningPlayers().isEmpty();
     }
 
     @Override
@@ -233,8 +367,16 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return new ImmutableGraph<>(graph);
     }
 
+    private boolean isMrXPositionKnownToPlayers(int round) {
+        if (round >= getRounds().size()) {
+            return false;
+        } else {
+            return getRounds().get(round);
+        }
+    }
+
     private boolean isMrXPositionKnownToPlayers() {
-        return getRounds().get(currentRound);
+        return isMrXPositionKnownToPlayers(currentRound);
     }
 
     private Optional<ScotlandYardPlayer> getPlayer(Colour colour) {
@@ -245,5 +387,13 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private ScotlandYardPlayer getMrX() {
         return getPlayer(Colour.BLACK).orElseThrow(() -> new RuntimeException("BUG: MrX no longer a player!"));
+    }
+
+    private void movePlayer(ScotlandYardPlayer player, int destination) {
+        player.location(destination);
+
+        if (player.colour() == Colour.BLACK && isMrXPositionKnownToPlayers()) {
+            mrXLastSeenLocation = destination;
+        }
     }
 }
