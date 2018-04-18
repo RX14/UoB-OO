@@ -19,7 +19,6 @@ public class JeffJeffordson implements PlayerFactory {
 
     private static class MyPlayer implements Player {
         private final Colour colour;
-        private final Random random = new Random();
 
         MyPlayer(Colour colour) {
             this.colour = colour;
@@ -27,20 +26,8 @@ public class JeffJeffordson implements PlayerFactory {
         }
 
         @Override
-        public void makeMove(ScotlandYardView view, int location, Set<Move> moves,
-                             Consumer<Move> callback) {
+        public void makeMove(ScotlandYardView view, int location, Set<Move> moves, Consumer<Move> callback) {
 
-        }
-
-        private int distanceBetweenLocations(Graph<Integer, Transport> graph, int from, int to) {
-            Map<Node<Integer>, Integer> distances = new HashMap<>();
-            PriorityQueue<Node<Integer>> nodes = new PriorityQueue<>();
-
-            distances.put(graph.getNode(from), 0);
-
-            //graph.getEdgesFrom(graph.getNode(from));
-
-            return 0;
         }
     }
 }
