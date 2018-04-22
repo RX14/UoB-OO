@@ -133,6 +133,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     private void moveMade(Set<Move> allowedMoves, Move move) {
         Objects.requireNonNull(move);
+        Objects.requireNonNull(allowedMoves);
         if (!allowedMoves.contains(move)) {
             throw new IllegalArgumentException("Player did not play a valid move");
         }
