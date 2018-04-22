@@ -25,7 +25,7 @@ public class JeffUtils {
      * @param startingLocations a set of possible starting locations to calculate the distances at each node from
      * @return a map of graph keys to the distance at the node with that key from the closest of the starting locations
      */
-    public static <Key, Value> Map<Key, Integer> generateDistances(Graph<Key, Value> graph, Set<Key> startingLocations) {
+    public static <Key> Map<Key, Integer> generateDistances(Graph<Key, ?> graph, Set<Key> startingLocations) {
         List<NodeWrapper<Key>> startingNodes = startingLocations.stream()
                 .map(number -> new NodeWrapper<>(graph.getNode(number), 0))
                 .collect(Collectors.toList());
@@ -47,7 +47,7 @@ public class JeffUtils {
             graph.getEdgesFrom(node.node).forEach(edge -> {
                 if (!nodeDistances.containsKey(edge.destination().value())) {
                     int newDistance = node.distance + 1;
-                    unmarkedNodes.add(new NodeWrapper<Key>(edge.destination(), newDistance));
+                    unmarkedNodes.add(new NodeWrapper<>(edge.destination(), newDistance));
                 }
             });
         }
