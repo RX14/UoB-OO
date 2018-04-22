@@ -2,7 +2,10 @@ package uk.ac.bris.cs.scotlandyard.ui.ai;
 
 import uk.ac.bris.cs.scotlandyard.ai.ManagedAI;
 import uk.ac.bris.cs.scotlandyard.ai.PlayerFactory;
-import uk.ac.bris.cs.scotlandyard.model.*;
+import uk.ac.bris.cs.scotlandyard.model.Colour;
+import uk.ac.bris.cs.scotlandyard.model.Move;
+import uk.ac.bris.cs.scotlandyard.model.Player;
+import uk.ac.bris.cs.scotlandyard.model.ScotlandYardView;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -39,7 +42,7 @@ public class JeffJeffordson implements PlayerFactory {
 
             Move moveToMake = moves.stream()
                     .filter(move -> JeffUtils.shouldPlayMove(move, currentDistance, moves))
-                    .max(Comparator.comparingInt(move -> distances.get(JeffUtils.getDestination(move, currentLocation))))
+                    .max(Comparator.comparingInt(move -> JeffUtils.score(move, view.getGraph(), distances, currentLocation)))
                     .orElseThrow(() -> new RuntimeException("Could not find a move to make!"));
 
             callback.accept(moveToMake);

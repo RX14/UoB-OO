@@ -8,6 +8,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class JeffUtils {
+
+    public static int score(Move move, Graph<Integer, Transport> graph, Map<Integer, Integer> distances, int currentLocation) {
+        Integer moveDestination = JeffUtils.getDestination(move, currentLocation);
+        int destinationConnectivity = graph.getEdgesFrom(graph.getNode(moveDestination)).size();
+        int distance = distances.get(moveDestination);
+
+        return destinationConnectivity * distance;
+    }
+
     /**
      * Generate the distances at each node on a graph from the closest of a set of possible starting locations. Each
      * edge is assumed to have a weight of one.
