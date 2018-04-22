@@ -5,7 +5,6 @@ import uk.ac.bris.cs.scotlandyard.ai.PlayerFactory;
 import uk.ac.bris.cs.scotlandyard.model.*;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -28,29 +27,22 @@ public class JeffJeffordson implements PlayerFactory {
         }
 
         @Override
-        public void makeMove(ScotlandYardView view, int location, Set<Move> moves, Consumer<Move> callback) {
-            List<Integer> detectiveLocations = view.getPlayers().stream()
+        public void makeMove(ScotlandYardView view, int currentLocation, Set<Move> moves, Consumer<Move> callback) {
+            Set<Integer> detectiveLocations = view.getPlayers().stream()
                     .filter(colour -> colour != Colour.BLACK)
-                    .map(colour -> view.getPlayerLocation(colour).get())
-                    .collect(Collectors.toList());
+                    .map(colour -> view.getPlayerLocation(colour)
+                            .orElseThrow(() -> new IllegalStateException("Player " + colour + " has no location")))
+                    .collect(Collectors.toSet());
 
-            Map<Integer, Integer> distances = Utils.generateDistances(view.getGraph(), detectiveLocations);
+            Map<Integer, Integer> distances = JeffUtils.generateDistances(view.getGraph(), detectiveLocations);
+            int currentDistance = distances.get(currentLocation);
 
-            Move moveToMake = moves.stream().max(Comparator.comparingInt(o -> distances.get(getDestination(location, o)))).get();
+            Move moveToMake = moves.stream()
+                    .filter(move -> JeffUtils.shouldPlayMove(move, currentDistance, moves))
+                    .max(Comparator.comparingInt(move -> distances.get(JeffUtils.getDestination(move, currentLocation))))
+                    .orElseThrow(() -> new RuntimeException("Could not find a move to make!"));
 
             callback.accept(moveToMake);
-        }
-
-        private Integer getDestination(int location, Move move) {
-            if (move instanceof PassMove) {
-                return location;
-            } else if (move instanceof TicketMove) {
-                return ((TicketMove) move).destination();
-            } else if (move instanceof DoubleMove) {
-                return ((DoubleMove) move).finalDestination();
-            } else {
-                throw new IllegalStateException("Unknown move type");
-            }
         }
     }
 }
