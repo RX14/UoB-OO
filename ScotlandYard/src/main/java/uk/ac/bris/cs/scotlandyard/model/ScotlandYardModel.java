@@ -93,9 +93,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void registerSpectator(Spectator spectator) {
-        if (spectator == null) {
-            throw new NullPointerException("The spectator is null");
-        }
+        Objects.requireNonNull(spectator);
         spectators.forEach(existingspectator -> {
             if (spectator == existingspectator) {
                 throw new IllegalArgumentException("");
