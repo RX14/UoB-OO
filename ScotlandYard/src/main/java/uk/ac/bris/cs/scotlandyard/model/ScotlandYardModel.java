@@ -202,8 +202,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
         checkGameOver(roundOver, movePlayer);
 
         Objects.requireNonNull(visibleMove, "BUG: Visible move was not initialized");
-        final Move javaIsTheBigGay = visibleMove;
-        spectators.forEach(spectator -> spectator.onMoveMade(this, javaIsTheBigGay));
+        final Move finalmove = visibleMove;
+        spectators.forEach(spectator -> spectator.onMoveMade(this, finalmove));
 
         if (isGameOver()) {
             spectators.forEach(spectator -> spectator.onGameOver(this, winners));
@@ -217,6 +217,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
     }
 
+    //This checks to see if any of the win conditions
     private void checkGameOver(boolean roundOver, ScotlandYardPlayer player) {
         boolean mrXWon = false;
         boolean detectivesWon = false;
@@ -248,12 +249,12 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
     }
 
+    //Generates a list of all the valid moves the player can make
     private Set<Move> generateValidMoves(ScotlandYardPlayer currentPlayer) {
         Set<Move> playerMoves = new HashSet<>();
         Set<DoubleMove> doubles = new HashSet<>();
-
-        //This will need to be cleaned up and re written
         Set<TicketMove> ticketmoves = generateTicketMoves(currentPlayer);
+
         if (currentPlayer.hasTickets(Ticket.DOUBLE) && currentPlayer.colour() == Colour.BLACK && currentRound + 2 < rounds.size()) {
             ticketmoves.forEach(move -> {
                 doubles.addAll(generateDoubleMoves(currentPlayer, move));
@@ -263,13 +264,15 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
         playerMoves.addAll(ticketmoves);
         playerMoves.addAll(doubles);
-        //if moves still empty here mrx loses
+
         if (currentPlayer.colour() != Colour.BLACK && playerMoves.isEmpty()) {
             playerMoves.add(new PassMove(currentPlayer.colour()));
         }
         return playerMoves;
     }
 
+    //Generates a set of ticket moves by checking if the player meets the
+    //conditions of moving to the node
     private Set<TicketMove> generateTicketMoves(ScotlandYardPlayer currentPlayer) {
         Set<TicketMove> ticketMoves = new HashSet<>();
         Collection<Edge<Integer, Transport>> edges = this.graph.getEdgesFrom(this.graph.getNode(currentPlayer.location()));
@@ -288,6 +291,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return ticketMoves;
     }
 
+    //Creates a new player to model the second move of the double move and
+    //generates a second set of ticket moves
     private Set<DoubleMove> generateDoubleMoves(ScotlandYardPlayer currentPlayer, TicketMove fmove) {
         ScotlandYardPlayer jeff = new ScotlandYardPlayer(currentPlayer.player(), currentPlayer.colour(),
                 currentPlayer.location(), currentPlayer.tickets());
@@ -299,7 +304,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
                 .collect(Collectors.toSet());
     }
 
-
+    //Checks to see if there is a detective a a certain node
     private boolean isNodeUnoccupied(int local) {
         for (ScotlandYardPlayer persons : players) {
             if (persons.location() == local && persons.colour() != Colour.BLACK) {
@@ -315,6 +320,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
+    //Maps player to player colours to return the player colours
     public List<Colour> getPlayers() {
         List<Colour> playerColours = players.stream()
                 .map(player -> player.colour())
@@ -329,6 +335,8 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
+    //Returns the players location unless it isn't a reveal round where it
+    //returns MrX's last known location
     public Optional<Integer> getPlayerLocation(Colour colour) {
         if (colour == Colour.BLACK) {
             return Optional.of(mrXLastSeenLocation);
@@ -338,11 +346,13 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
+    //Maps player to player tickets to return the player tickets
     public Optional<Integer> getPlayerTickets(Colour colour, Ticket ticket) {
         return getPlayer(colour).map(player -> player.tickets().get(ticket));
     }
 
     @Override
+    //Checks to see if the game is over
     public boolean isGameOver() {
         return !getWinningPlayers().isEmpty();
     }
@@ -358,6 +368,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
     }
 
     @Override
+    //Returns a list of whether or not it is a reveal round
     public List<Boolean> getRounds() {
         return Collections.unmodifiableList(rounds);
     }
@@ -367,6 +378,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
         return new ImmutableGraph<>(graph);
     }
 
+    //Checks to see if it a specified round is a reveal round
     private boolean isMrXPositionKnownToPlayers(int round) {
         if (round >= getRounds().size()) {
             return false;
@@ -375,20 +387,25 @@ public class ScotlandYardModel implements ScotlandYardGame {
         }
     }
 
+    //Checks to see if the current round is a reveal round
     private boolean isMrXPositionKnownToPlayers() {
         return isMrXPositionKnownToPlayers(currentRound);
     }
 
+    //Returns the colour of the specified player
     private Optional<ScotlandYardPlayer> getPlayer(Colour colour) {
         return players.stream()
                 .filter(player -> player.colour() == colour)
                 .findFirst();
     }
 
+    //Returns the player MrX
     private ScotlandYardPlayer getMrX() {
         return getPlayer(Colour.BLACK).orElseThrow(() -> new RuntimeException("BUG: MrX no longer a player!"));
     }
 
+    //Moves the player from one location to the other and records mrX's location
+    //if it is a reveal round
     private void movePlayer(ScotlandYardPlayer player, int destination) {
         player.location(destination);
 
