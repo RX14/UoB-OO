@@ -106,9 +106,7 @@ public class ScotlandYardModel implements ScotlandYardGame {
 
     @Override
     public void unregisterSpectator(Spectator spectator) {
-        if (spectator == null) {
-            throw new NullPointerException("Not sure what's happening");
-        }
+        Objects.requireNonNull(spectator);
         if (spectators.isEmpty()) {
             throw new IllegalArgumentException("There are no spectators to remove");
         }
